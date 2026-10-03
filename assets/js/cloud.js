@@ -36,7 +36,7 @@
 
   try {
     var path = location.pathname || '';
-    var isAdmin = /(^|\/)(admin|poor-dot-created)\.html$/.test(path) || /#edit/.test(location.hash || '');
+    var isAdmin = /(^|\/)(admin|poor-dot-created)(\.html)?$/.test(path) || /#edit/.test(location.hash || '');
     if (isAdmin) return; // 后台 / 编辑模式：不走云端只读，直接用本地可写
     var xhr = new XMLHttpRequest();
     xhr.open('GET', CLOUD.URL, false); // 同步，确保渲染前就绪
