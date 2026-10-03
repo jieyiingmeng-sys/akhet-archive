@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>马甲 · AKHET</title>
+<link rel="stylesheet" href="assets/css/base.css">
+<link rel="stylesheet" href="assets/css/front.css">
+<link rel="stylesheet" href="assets/css/atlas.css">
+<script>
+(function(){try{var a=JSON.parse(localStorage.getItem('aht.avatar')||'null');if(!a)return;
+  function rgb(x){x=x.replace('#','');if(x.length===3)x=x[0]+x[0]+x[1]+x[1]+x[2]+x[2];
+    return[parseInt(x.slice(0,2),16),parseInt(x.slice(2,4),16),parseInt(x.slice(4,6),16)];}
+  function ra(x,al){var c=rgb(x);return'rgba('+c[0]+','+c[1]+','+c[2]+','+al+')';}
+  var r=document.documentElement;
+  r.style.setProperty('--a1',a.a1);r.style.setProperty('--a2',a.a2);
+  r.style.setProperty('--a1-soft',ra(a.a1,.16));r.style.setProperty('--a2-soft',ra(a.a2,.16));
+  r.setAttribute('data-avatar',a.key);}catch(e){}})();
+</script>
+</head>
+<body>
+<nav class="site-nav"><a class="brand" href="index.html"></a></nav>
+
+<main class="wrap">
+  <section class="section-sm">
+    <div class="sec-head"><span class="sec-num">02 · AVATAR</span><span class="sec-title" id="avName">—</span><span class="sec-en" id="avRole"></span></div>
+    <p class="lede" id="avDesc"></p>
+  </section>
+
+  <section class="section-sm">
+    <div class="av-detail">
+      <div>
+        <div class="av-hero" id="avHero" data-img=""><span class="ph">主视觉<br>待上传</span></div>
+        <div class="album" id="album"></div>
+      </div>
+      <div>
+        <div class="sec-head"><span class="sec-num">STORIES</span><span class="sec-title">相关故事</span></div>
+        <div class="cover-wall two" id="stories"></div>
+        <div class="sec-head" style="margin-top:34px"><span class="sec-num">NOTES</span><span class="sec-title">相关的祂的视角</span></div>
+        <div class="cover-wall two" id="notes"></div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="site-foot"><div><a href="avatars.html">全部马甲</a>　·　<a href="index.html">返回首页</a></div></footer>
+
+<div class="lightbox" id="lb"><span class="lb-close">×</span><img id="lbImg" alt=""><div class="lb-cap" id="lbCap"></div></div>
+
+<script src="assets/js/snapshot.js"></script>
+<script src="assets/js/store.js"></script>
+<script src="assets/js/seed.js"></script>
+<script src="assets/js/markdown.js"></script>
+<script src="assets/js/common.js"></script>
+<script>
+(function () {
+  var esc = Common.esc;
+  var s = Store.load();
+  Common.initNav('avatars');
+
+  var id = Common.q('id');
+  var r = Store.byId('relations', id);
+  if (!r || !Common.isAvatar(r)) {
+    document.querySelector('main').innerHTML = '<div class="wrap">' + Common.empty('找不到这个马甲。') + '</div>';
+    return;
+  }
+
+  // 进入马甲页 → 整站换成该马甲的强调色（不写入本地，离开后回到原选择）
+  Common.applyAvatar({
+    key: 'rel-' + r.id, name: r.name, meta: r.role || '',
+    a1: r.color || '#5b87cf', a2: Common.hueShift(r.color || '#5b87cf', 150)
+  }, true);
+
+  document.title = r.name + ' · AKHET';
+  document.getElementById('avName').textContent = r.name;
+  document.getElementById('avRole').textContent = r.role || '';
+  document.getElementById('avDesc').textContent = r.desc || '';
+
+  var hero = document.getElementById('avHero');
+  if (r.portrait) {
+    hero.setAttribute('data-img', r.portrait);
+    var ph = hero.querySelector('.ph'); if (ph) ph.remove();
+  }
+  Common.fillImages(document);
+
+  var album = r.album || [];
+  document.getElementById('album').innerHTML = album.length
+    ? '<div class="sub-head">相册（' + album.length + ' 张，点击放大）</div><div class="img-grid">' +
+      album.map(function (i) {
+        return '<span class="img-cell zoomin"><i class="thumb" data-img="' + esc(i) + '"></i></span>';
+      }).join('') + '</div>'
+    : '<div class="sub-head">相册</div><div class="dim">还没有图片。到后台「马甲与关系 → 相册」上传。</div>';
+  Common.fillImages(document.getElementById('album'));
+
+  var arts = (r.storyIds || []).map(function (i) { return Store.byId('articles', i); }).filter(Boolean);
+  var st = arts.filter(function (a) { return (a.kind || 'story') === 'story'; });
+  var nt = arts.filter(function (a) { return a.kind === 'note'; });
+  document.getElementById('stories').innerHTML = st.length
+    ? Common.sortArticles(st).map(Common.articleCard).join('')
+    : Common.empty('这个马甲还没有挂故事。到后台「马甲与关系 → 关联故事」勾选。');
+  document.getElementById('notes').innerHTML = nt.length
+    ? Common.sortArticles(nt).map(Common.articleCard).join('')
+    : Common.empty('暂无。');
+  Common.fillImages(document);
+  Common.reveal();
+
+  /* 灯箱 */
+  var lb = document.getElementById('lb');
+  document.addEventListener('click', function (e) {
+    var c = e.target.closest('.zoomin');
+    if (c) {
+      var t = c.querySelector('.thumb');
+      var u = t && t.style.backgroundImage.slice(5, -2);
+      if (u) { document.getElementById('lbImg').src = u; lb.classList.add('open'); }
+      return;
+    }
+    if (e.target.closest('.lb-close') || e.target.id === 'lb') lb.classList.remove('open');
+  });
+})();
+</script>
+</body>
+</html>

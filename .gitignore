@@ -1,0 +1,6 @@
+# WorkBuddy 同步/开发副产物，不进站点仓库
+_sync/
+.workbuddy/
+
+# 平台重排元数据（仅 WorkBuddy 编辑态需要）
+*.janus.data.json

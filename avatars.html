@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>祂的马甲 · AKHET</title>
+<link rel="stylesheet" href="assets/css/base.css">
+<link rel="stylesheet" href="assets/css/front.css">
+<link rel="stylesheet" href="assets/css/atlas.css">
+<script>
+(function(){try{var a=JSON.parse(localStorage.getItem('aht.avatar')||'null');if(!a)return;
+  function rgb(x){x=x.replace('#','');if(x.length===3)x=x[0]+x[0]+x[1]+x[1]+x[2]+x[2];
+    return[parseInt(x.slice(0,2),16),parseInt(x.slice(2,4),16),parseInt(x.slice(4,6),16)];}
+  function ra(x,al){var c=rgb(x);return'rgba('+c[0]+','+c[1]+','+c[2]+','+al+')';}
+  var r=document.documentElement;
+  r.style.setProperty('--a1',a.a1);r.style.setProperty('--a2',a.a2);
+  r.style.setProperty('--a1-soft',ra(a.a1,.16));r.style.setProperty('--a2-soft',ra(a.a2,.16));
+  r.setAttribute('data-avatar',a.key);}catch(e){}})();
+</script>
+</head>
+<body>
+<nav class="site-nav"><a class="brand" href="index.html"></a></nav>
+
+<main class="wrap">
+  <section class="section-sm">
+    <div class="sec-head"><span class="sec-num">02 · AVATARS</span><span class="sec-title">祂的马甲</span><span class="sec-en">The Same One, Walking</span></div>
+    <p class="lede">不存在意识分流。伏羲、托特、恩基、普罗米修斯、羽蛇神——从头到尾都是同一个祂在走。点卡片进入该马甲，整站配色会随之切换。</p>
+  </section>
+
+  <section class="section-sm">
+    <div class="av-grid" id="avGrid"></div>
+  </section>
+</main>
+
+<footer class="site-foot"><div><a href="index.html">返回首页</a>　·　<a href="relations.html">社交关系网</a></div></footer>
+
+<script src="assets/js/snapshot.js"></script>
+<script src="assets/js/store.js"></script>
+<script src="assets/js/seed.js"></script>
+<script src="assets/js/markdown.js"></script>
+<script src="assets/js/common.js"></script>
+<script>
+(function () {
+  var esc = Common.esc;
+  var s = Store.load();
+  Common.initNav('avatars');
+
+  var rels = s.relations || [];
+  var avs = rels.filter(Common.isAvatar);
+
+  function storyTitles(ids) {
+    return (ids || []).map(function (i) {
+      var a = Store.byId('articles', i);
+      return a ? '<a class="av-story" href="read.html?id=' + encodeURIComponent(i) + '">' + esc(a.title) + '</a>' : '';
+    }).filter(Boolean).join('');
+  }
+
+  function card(r, href, isSelf) {
+    var st = storyTitles(r.storyIds);
+    return '<div class="av-card reveal' + (isSelf ? ' is-self' : '') + '" style="--c:' + (r.color || '#5b87cf') + '">' +
+      '<span class="av-img" data-img="' + esc(r.portrait || '') + '"></span>' +
+      '<div class="av-body">' +
+      '<div class="av-role">' + esc(r.role || '') + '</div>' +
+      '<h3><a class="stretched" href="' + href + '">' + esc(r.name) + '</a></h3>' +
+      '<p>' + esc(r.desc || '') + '</p>' +
+      '<div class="av-stories">' + (st || '<span class="dim">（暂无相关故事）</span>') + '</div>' +
+      '</div><span class="av-go">' + (isSelf ? '完整档案' : '进入') + ' →</span></div>';
+  }
+
+  // 本相卡片：不挂任何马甲的故事，视作以本相身份发生
+  var selfStories = Store.stories()
+    .filter(function (a) { return !(a.avatarIds || []).length; })
+    .map(function (a) { return a.id; });
+  var self = {
+    name: s.profile.name || '本相',
+    role: s.profile.alias || 'Akhet · 本相',
+    color: '#5b87cf',
+    portrait: s.profile.portrait || '',
+    desc: s.profile.quote || '',
+    storyIds: selfStories
+  };
+
+  document.getElementById('avGrid').innerHTML =
+    card(self, 'index.html', true) +
+    (avs.length ? avs.map(function (r) {
+      return card(r, 'avatar.html?id=' + encodeURIComponent(r.id), false);
+    }).join('') : Common.empty('还没有马甲。到后台「马甲与关系」里，把分组设为「马甲」即可出现在这里与顶部切换器。'));
+
+  Common.fillImages(document);
+  Common.reveal();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>故事全列表 · AKHET</title>
+<link rel="stylesheet" href="assets/css/base.css">
+<link rel="stylesheet" href="assets/css/front.css">
+<link rel="stylesheet" href="assets/css/atlas.css">
+<script>
+(function(){try{var a=JSON.parse(localStorage.getItem('aht.avatar')||'null');if(!a)return;
+  function rgb(x){x=x.replace('#','');if(x.length===3)x=x[0]+x[0]+x[1]+x[1]+x[2]+x[2];
+    return[parseInt(x.slice(0,2),16),parseInt(x.slice(2,4),16),parseInt(x.slice(4,6),16)];}
+  function ra(x,al){var c=rgb(x);return'rgba('+c[0]+','+c[1]+','+c[2]+','+al+')';}
+  var r=document.documentElement;
+  r.style.setProperty('--a1',a.a1);r.style.setProperty('--a2',a.a2);
+  r.style.setProperty('--a1-soft',ra(a.a1,.16));r.style.setProperty('--a2-soft',ra(a.a2,.16));
+  r.setAttribute('data-avatar',a.key);}catch(e){}})();
+</script>
+</head>
+<body>
+<nav class="site-nav"><a class="brand" href="index.html"></a></nav>
+
+<main class="wrap">
+  <section class="section-sm">
+    <div class="sec-head"><span class="sec-num">07 · STORIES</span><span class="sec-title">故事全列表</span><span class="sec-en" id="cnt"></span></div>
+    <p class="lede">全站可读条目的总目录。收录<strong>故事</strong>、<a href="view.html" style="color:var(--a1)">祂的视角</a>里的<strong>笔记</strong>、以及<a href="record.html" style="color:var(--a1)">目击记录</a>里的<strong>历史误读</strong>与<strong>诋毁、冠名混乱</strong>。三者之间可能互相关联，也可能彼此都没有对方——一件只被故事记下的事、或一条没有对应故事的诋毁，一样在这张表里。</p>
+    <div class="filter-bar" id="tagWrap"></div>
+    <div class="filter-bar">
+      <span class="fb-label">来源</span>
+      <select id="src">
+        <option value="">全部来源</option>
+        <option value="story">故事</option>
+        <option value="note">祂的视角（笔记）</option>
+        <option value="misread">历史误读</option>
+        <option value="slander">诋毁与冠名混乱</option>
+        <option value="solo">独立条目（未被另两类记录）</option>
+      </select>
+      <span class="fb-label">关键词</span>
+      <input type="search" id="kw" placeholder="标题 / 副标题 / 时代 / 地区">
+      <span class="fb-label">载体</span>
+      <select id="med"><option value="">全部载体</option></select>
+    </div>
+  </section>
+
+  <section class="section-sm">
+    <div class="cover-wall" id="wall"></div>
+  </section>
+</main>
+
+<footer class="site-foot"><div><a href="index.html">返回首页</a>　·　<a href="view.html">祂的视角</a></div></footer>
+
+<script src="assets/js/snapshot.js"></script>
+<script src="assets/js/store.js"></script>
+<script src="assets/js/seed.js"></script>
+<script src="assets/js/markdown.js"></script>
+<script src="assets/js/common.js"></script>
+<script>
+(function () {
+  var s = Store.load();
+  Common.initNav('stories');
+
+  /* 统一视图：故事 + 祂的视角笔记 + 目击记录（历史误读 / 诋毁与冠名混乱） */
+  var all = Store.readables();
+  var tags = [];
+  all.forEach(function (a) { (a.tags || []).forEach(function (t) { if (tags.indexOf(t) < 0) tags.push(t); }); });
+
+  var medSel = document.getElementById('med');
+  medSel.innerHTML += Store.MEDIUMS.map(function (m) {
+    return '<option value="' + m.id + '">' + m.name + '</option>';
+  }).join('');
+
+  var picked = [], kw = '', med = '', src = '';
+  var host = document.getElementById('wall');
+
+  function card(o) {
+    if (o._src === 'misread' || o._src === 'slander') return Common.misreadCard(o, 'data-src="' + o._src + '"');
+    return Common.articleCard(o, 'data-src="' + o._src + '"');
+  }
+
+  function paint() {
+    var list = Common.sortArticles(all).filter(function (a) {
+      if (src === 'solo') { if (Store.crossLinked(a)) return false; }
+      else if (src && a._src !== src) return false;
+      if (!Common.matchTags(a, picked)) return false;
+      if (med) {
+        // 载体只对故事与笔记有意义；目击记录无载体，选了具体载体时不参与
+        if (a._src === 'misread' || a._src === 'slander') return false;
+        if (a.medium !== med) return false;
+      }
+      if (kw) {
+        var hay = [a.title, a.subtitle, a.era, a.region, a.summary, a.body].join(' ').toLowerCase();
+        if (hay.indexOf(kw.toLowerCase()) < 0) return false;
+      }
+      return true;
+    });
+    document.getElementById('cnt').textContent = list.length + ' / ' + all.length;
+    host.innerHTML = list.length ? list.map(card).join('') : Common.empty('没有符合条件的条目。');
+    Common.fillImages(host); Common.reveal(host);
+  }
+
+  document.getElementById('tagWrap').appendChild(Common.tagBar(tags, function (cur) { picked = cur; paint(); }));
+  document.getElementById('kw').oninput = function () { kw = this.value.trim(); paint(); };
+  medSel.onchange = function () { med = this.value; paint(); };
+  document.getElementById('src').onchange = function () { src = this.value; paint(); };
+
+  paint();
+})();
+</script>
+</body>
+</html>

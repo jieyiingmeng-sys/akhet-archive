@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>祂的视角 · AKHET</title>
+<link rel="stylesheet" href="assets/css/base.css">
+<link rel="stylesheet" href="assets/css/front.css">
+<link rel="stylesheet" href="assets/css/atlas.css">
+<script>
+(function(){try{var a=JSON.parse(localStorage.getItem('aht.avatar')||'null');if(!a)return;
+  function rgb(x){x=x.replace('#','');if(x.length===3)x=x[0]+x[0]+x[1]+x[1]+x[2]+x[2];
+    return[parseInt(x.slice(0,2),16),parseInt(x.slice(2,4),16),parseInt(x.slice(4,6),16)];}
+  function ra(x,al){var c=rgb(x);return'rgba('+c[0]+','+c[1]+','+c[2]+','+al+')';}
+  var r=document.documentElement;
+  r.style.setProperty('--a1',a.a1);r.style.setProperty('--a2',a.a2);
+  r.style.setProperty('--a1-soft',ra(a.a1,.16));r.style.setProperty('--a2-soft',ra(a.a2,.16));
+  r.setAttribute('data-avatar',a.key);}catch(e){}})();
+</script>
+</head>
+<body>
+<nav class="site-nav"><a class="brand" href="index.html"></a></nav>
+
+<main class="wrap">
+  <section class="section-sm">
+    <div class="sec-head"><span class="sec-num">03 · VIEW</span><span class="sec-title">祂的视角</span><span class="sec-en">His Own Notes</span></div>
+    <p class="lede">祂自己写下来的东西。点开一篇，它会以所属时代与国家的书籍形态出现。</p>
+  </section>
+
+  <section class="section-sm">
+    <div class="filter-bar" id="tagWrap"></div>
+    <div class="cover-wall" id="wall"></div>
+  </section>
+</main>
+
+<footer class="site-foot"><div><a href="index.html">返回首页</a>　·　<a href="stories.html">故事全列表</a></div></footer>
+
+<script src="assets/js/snapshot.js"></script>
+<script src="assets/js/store.js"></script>
+<script src="assets/js/seed.js"></script>
+<script src="assets/js/markdown.js"></script>
+<script src="assets/js/common.js"></script>
+<script>
+(function () {
+  var s = Store.load();
+  Common.initNav('view');
+
+  var notes = Store.notes();
+  var tags = [];
+  notes.forEach(function (a) { (a.tags || []).forEach(function (t) { if (tags.indexOf(t) < 0) tags.push(t); }); });
+
+  var picked = [];
+  var host = document.getElementById('wall');
+  var bar = document.getElementById('tagWrap');
+  bar.appendChild(Common.tagBar(tags, function (cur) {
+    picked = cur;
+    var list = Common.sortArticles(notes).filter(function (a) { return Common.matchTags(a, cur); });
+    host.innerHTML = list.length ? list.map(Common.articleCard).join('') : Common.empty('没有符合条件的笔记。');
+    Common.fillImages(host); Common.reveal(host);
+  }));
+
+  var list = Common.sortArticles(notes);
+  host.innerHTML = list.length ? list.map(Common.articleCard).join('') : Common.empty('还没有笔记。到后台「祂的笔记」里新建。');
+  Common.fillImages(host);
+  Common.reveal();
+})();
+</script>
+</body>
+</html>

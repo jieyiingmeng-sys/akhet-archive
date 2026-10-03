@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>插画 · AKHET</title>
+<link rel="stylesheet" href="assets/css/base.css">
+<link rel="stylesheet" href="assets/css/front.css">
+<link rel="stylesheet" href="assets/css/atlas.css">
+<script>
+(function(){try{var a=JSON.parse(localStorage.getItem('aht.avatar')||'null');if(!a)return;
+  function rgb(x){x=x.replace('#','');if(x.length===3)x=x[0]+x[0]+x[1]+x[1]+x[2]+x[2];
+    return[parseInt(x.slice(0,2),16),parseInt(x.slice(2,4),16),parseInt(x.slice(4,6),16)];}
+  function ra(x,al){var c=rgb(x);return'rgba('+c[0]+','+c[1]+','+c[2]+','+al+')';}
+  var r=document.documentElement;
+  r.style.setProperty('--a1',a.a1);r.style.setProperty('--a2',a.a2);
+  r.style.setProperty('--a1-soft',ra(a.a1,.16));r.style.setProperty('--a2-soft',ra(a.a2,.16));
+  r.setAttribute('data-avatar',a.key);}catch(e){}})();
+</script>
+</head>
+<body>
+<nav class="site-nav"><a class="brand" href="index.html"></a></nav>
+
+<main class="wrap">
+  <section class="section-sm">
+    <div class="sec-head"><span class="sec-num">09 · GALLERY</span><span class="sec-title">插画</span><span class="sec-en">Illustrations</span></div>
+    <p class="lede">立绘、场景与设定图。点图放大。</p>
+  </section>
+  <section class="section-sm">
+    <div class="filter-bar" id="tagWrap"></div>
+    <div class="gal-wall" id="wall"></div>
+  </section>
+</main>
+
+<footer class="site-foot"><div><a href="index.html">返回首页</a>　·　<a href="fanworks.html">网友作品</a></div></footer>
+
+<div class="lightbox" id="lb"><span class="lb-close">×</span><img id="lbImg" alt=""><div class="lb-cap" id="lbCap"></div></div>
+
+<script src="assets/js/snapshot.js"></script>
+<script src="assets/js/store.js"></script>
+<script src="assets/js/seed.js"></script>
+<script src="assets/js/markdown.js"></script>
+<script src="assets/js/common.js"></script>
+<script>
+(function () {
+  var esc = Common.esc;
+  var s = Store.load();
+  Common.initNav('gallery');
+
+  var all = s.gallery || [];
+  var tags = [];
+  all.forEach(function (g) { (g.tags || []).forEach(function (t) { if (tags.indexOf(t) < 0) tags.push(t); }); });
+
+  var host = document.getElementById('wall');
+  function paint(cur) {
+    var list = all.filter(function (g) { return Common.matchTags(g, cur || []); });
+    host.innerHTML = list.length ? list.map(function (g) {
+      return '<div class="gal-item reveal" data-i="' + esc(g.id) + '">' +
+        '<div class="gi-img" data-img="' + esc(g.imageId || '') + '" style="aspect-ratio:' + esc(g.ratio || '3/4') + '"></div>' +
+        '<div class="gi-cap"><strong>' + esc(g.title) + '</strong><span>' + esc(g.caption || '') + '</span>' +
+        ((g.tags || []).length ? '<div class="chips">' + g.tags.map(function (t) { return '<span class="tag tag-gold">' + esc(t) + '</span>'; }).join('') + '</div>' : '') +
+        '</div></div>';
+    }).join('') : Common.empty('还没有插画。到后台「插画」里添加。');
+    Common.fillImages(host); Common.reveal(host);
+  }
+
+  document.getElementById('tagWrap').appendChild(Common.tagBar(tags, paint));
+  paint([]);
+
+  var lb = document.getElementById('lb');
+  host.addEventListener('click', function (e) {
+    var it = e.target.closest('.gal-item'); if (!it) return;
+    var img = it.querySelector('.gi-img');
+    var u = img && img.style.backgroundImage.slice(5, -2);
+    if (u) {
+      document.getElementById('lbImg').src = u;
+      document.getElementById('lbCap').textContent = it.querySelector('strong').textContent;
+      lb.classList.add('open');
+    }
+  });
+  lb.addEventListener('click', function (e) {
+    if (e.target.closest('.lb-close') || e.target.id === 'lb') lb.classList.remove('open');
+  });
+})();
+</script>
+</body>
+</html>

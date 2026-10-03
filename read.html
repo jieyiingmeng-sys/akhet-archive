@@ -1,0 +1,216 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>阅读 · AKHET</title>
+<link rel="stylesheet" href="assets/css/base.css">
+<link rel="stylesheet" href="assets/css/front.css">
+<link rel="stylesheet" href="assets/css/media.css">
+<link rel="stylesheet" href="assets/css/atlas.css">
+<script>
+(function(){try{var a=JSON.parse(localStorage.getItem('aht.avatar')||'null');if(!a)return;
+  function rgb(x){x=x.replace('#','');if(x.length===3)x=x[0]+x[0]+x[1]+x[1]+x[2]+x[2];
+    return[parseInt(x.slice(0,2),16),parseInt(x.slice(2,4),16),parseInt(x.slice(4,6),16)];}
+  function ra(x,al){var c=rgb(x);return'rgba('+c[0]+','+c[1]+','+c[2]+','+al+')';}
+  var r=document.documentElement;
+  r.style.setProperty('--a1',a.a1);r.style.setProperty('--a2',a.a2);
+  r.style.setProperty('--a1-soft',ra(a.a1,.16));r.style.setProperty('--a2-soft',ra(a.a2,.16));
+  r.setAttribute('data-avatar',a.key);}catch(e){}})();
+</script>
+</head>
+<body>
+<nav class="site-nav"><a class="brand" href="index.html"></a></nav>
+
+<div class="reader" id="reader">
+  <div class="wrap-narrow">
+    <div class="book-bar">
+      <a class="bbtn" id="back" href="stories.html">← 返回</a>
+      <span class="medium-badge" id="badge"></span>
+      <span class="spacer"></span>
+      <button class="bbtn" id="toggle-mode" style="display:none">切换排版</button>
+      <button class="bbtn" id="toggle-info">信息</button>
+      <a class="bbtn" id="prev" href="#" style="display:none">上一篇</a>
+      <a class="bbtn" id="next" href="#" style="display:none">下一篇</a>
+    </div>
+    <div id="info" style="display:none;margin-bottom:14px" class="card">
+      <div style="padding:14px 16px;font-size:13.5px;color:var(--ink-2);line-height:2" id="info-body"></div>
+    </div>
+    <div class="reader-shell" id="shell"></div>
+
+    <div id="mediaBox"></div>
+
+    <div class="rel-bar" id="relBar"></div>
+  </div>
+</div>
+
+<footer class="site-foot">
+  <div><a href="stories.html">故事全列表</a>　·　<a href="view.html">祂的视角</a></div>
+</footer>
+
+<script src="assets/js/snapshot.js"></script>
+<script src="assets/js/store.js"></script>
+<script src="assets/js/seed.js"></script>
+<script src="assets/js/markdown.js"></script>
+<script src="assets/js/common.js"></script>
+<script>
+(function () {
+  var s = Store.load();
+  var esc = Common.esc;
+  var id = Common.q('id');
+  var all = s.articles || [];
+  var a = Store.byId('articles', id);
+  var isNote = a && a.kind === 'note';
+
+  Common.initNav(isNote ? 'view' : 'stories', '', true);
+  document.getElementById('back').href = isNote ? 'view.html' : 'stories.html';
+  document.getElementById('back').textContent = isNote ? '← 祂的视角' : '← 故事全列表';
+
+  var list = Common.sortArticles(all.filter(function (x) { return (x.kind || 'story') === (isNote ? 'note' : 'story'); }));
+  var idx = list.map(function (x) { return x.id; }).indexOf(id);
+
+  if (!a) {
+    document.getElementById('shell').innerHTML = '<div class="empty">找不到这篇。</div>';
+    return;
+  }
+
+  var m = Store.medium(a.medium);
+  document.title = a.title + ' · ' + m.name;
+  document.getElementById('badge').innerHTML = '载体：<b>' + esc(m.name) + '</b>' +
+    (m.region ? '　' + esc(m.region) : '') + (m.era ? '　' + esc(m.era) : '');
+
+  var avs = (a.avatarIds || []).map(function (i) { return Store.byId('relations', i); }).filter(Boolean);
+  document.getElementById('info-body').innerHTML =
+    '<div><strong style="font-family:var(--kai);font-size:16px">' + esc(a.title) + '</strong>' + (a.subtitle ? '　' + esc(a.subtitle) : '') + '</div>' +
+    '<div>时代：' + esc(a.era || '—') + '　地区：' + esc(a.region || '—') + '　年份：' + esc(a.year || '—') + '</div>' +
+    '<div>载体：' + esc(m.name) + '　<span style="opacity:.7">' + esc(m.hint || '') + '</span></div>' +
+    (avs.length ? '<div>相关马甲：' + avs.map(function (r) {
+      return '<a href="avatar.html?id=' + encodeURIComponent(r.id) + '" style="color:' + (r.color || 'var(--a1)') + '">' + esc(r.name) + '</a>';
+    }).join('　') + '</div>' : '') +
+    ((a.tags || []).length ? '<div class="chips" style="margin-top:6px">' + a.tags.map(function (t) { return '<span class="chip">#' + esc(t) + '</span>'; }).join('') + '</div>' : '');
+
+  document.getElementById('toggle-info').onclick = function () {
+    var el = document.getElementById('info');
+    el.style.display = el.style.display === 'none' ? '' : 'none';
+  };
+
+  if (idx > 0) { var p = document.getElementById('prev'); p.href = 'read.html?id=' + encodeURIComponent(list[idx - 1].id); p.style.display = ''; }
+  if (idx >= 0 && idx < list.length - 1) { var n = document.getElementById('next'); n.href = 'read.html?id=' + encodeURIComponent(list[idx + 1].id); n.style.display = ''; }
+
+  var VERT = { bamboo: 1, silk: 1, thread: 1, washi: 1 };
+  var vertical = !!VERT[a.medium];
+  var reader = document.getElementById('reader');
+  reader.classList.add('medium-' + a.medium);
+  reader.classList.add(vertical ? 'vertical' : 'horizontal');
+
+  var tbtn = document.getElementById('toggle-mode');
+  if (VERT[a.medium]) {
+    tbtn.style.display = '';
+    tbtn.textContent = vertical ? '改横排' : '改竖排';
+    tbtn.onclick = function () {
+      reader.classList.toggle('vertical');
+      reader.classList.toggle('horizontal');
+      vertical = reader.classList.contains('vertical');
+      tbtn.textContent = vertical ? '改横排' : '改竖排';
+      var bk = document.getElementById('book');
+      if (bk) bk.scrollLeft = vertical ? bk.scrollWidth : 0;
+    };
+  }
+
+  /* ---------- 组装书页 ---------- */
+  var shell = document.getElementById('shell');
+  var html = '<div class="book-wrap" id="bookWrap">';
+
+  if (a.medium === 'papyrus') html += '<div class="glyph-row">☥　⌇　☥　⌇　☥　⌇　☥</div>';
+  if (a.medium === 'bamboo') html += '<div class="cord c1"></div><div class="cord c2"></div>';
+  if (a.medium === 'silk') html += '<div class="rod l"></div><div class="rod r"></div>';
+
+  html += '<div class="book" id="book">';
+
+  if (a.medium === 'thread') html += '<div class="frame"></div><div class="fish-tail"></div><div class="stitch"><i></i><i></i><i></i><i></i></div>';
+  if (a.medium === 'washi') html += '<div class="stitch"><i></i><i></i><i></i><i></i></div>';
+  if (a.medium === 'codex') html += '<div class="illum"><i></i><i></i><i></i><i></i></div>';
+  if (a.medium === 'modern') html += '<div class="win-bar" style="margin:-40px -46px 26px"><i></i><i></i><i></i><span>' + esc(a.title) + '</span></div>';
+  if (a.medium === 'letterpress') html += '<div class="run-head"><span>' + esc(a.title) + '</span><span>' + esc(a.era || '') + '</span></div>';
+
+  if (a.medium === 'quipu') {
+    html += '<div class="main-cord"></div><div class="quipu-grid" id="quipu"></div>' +
+            '<div class="trans"><h4>释　文</h4><div class="md-body" id="body"></div></div></div>';
+  } else {
+    html += '<div class="md-body" id="body"></div></div>';
+  }
+
+  if (a.medium === 'clay') html += '<div class="seal-imp">印</div>';
+  if (a.medium === 'letterpress') html += '<div class="page-num">— 1 —</div>';
+  if (a.medium === 'papyrus') html += '<div class="glyph-row">⌇　☥　⌇　☥　⌇　☥　⌇</div>';
+
+  html += '</div>';
+  shell.innerHTML = html;
+
+  var body = document.getElementById('body');
+  body.innerHTML = MD.parse(a.body || '_（本文还没有正文）_');
+  Common.fillImages(body);
+
+  /* ---------- 分简 / 分页 ---------- */
+  if (a.medium === 'bamboo') {
+    var kids = Array.prototype.slice.call(body.children);
+    body.innerHTML = '';
+    kids.forEach(function (k) { var d = document.createElement('div'); d.className = 'slat'; d.appendChild(k); body.appendChild(d); });
+  }
+  if (a.medium === 'palm') {
+    var kids2 = Array.prototype.slice.call(body.children);
+    body.innerHTML = '';
+    kids2.forEach(function (k) {
+      var d = document.createElement('div'); d.className = 'leaf';
+      d.innerHTML = '<span class="hole2"></span>';
+      d.appendChild(k); body.appendChild(d);
+    });
+    var cl = document.createElement('div'); cl.className = 'cordline';
+    document.getElementById('book').appendChild(cl);
+  }
+
+  /* ---------- 结绳可视化 ---------- */
+  if (a.medium === 'quipu') {
+    var grid = document.getElementById('quipu');
+    var items = [];
+    var colors = ['', 'colored', 'blue'];
+    body.querySelectorAll('li').forEach(function (li) { items.push(li.textContent.trim()); });
+    if (!items.length) {
+      body.querySelectorAll('p').forEach(function (p) {
+        p.textContent.split(/[。！？\n]/).forEach(function (t) { t = t.trim(); if (t) items.push(t); });
+      });
+    }
+    if (!items.length) items = ['（无可记之数）'];
+    grid.innerHTML = items.slice(0, 9).map(function (txt, i) {
+      var n = Math.max(1, Math.min(8, Math.round(txt.length / 5) + 1));
+      var knots = new Array(n + 1).join('<span class="knot"></span>');
+      var h = 40 + n * 26;
+      return '<div class="pend">' +
+        '<div style="display:flex;flex-direction:column;align-items:center">' +
+        '<span class="string ' + colors[i % 3] + '" style="height:' + h + 'px;margin-bottom:-' + (h - 4) + 'px"></span>' +
+        '<div style="display:flex;flex-direction:column;align-items:center;padding-top:6px">' + knots + '</div>' +
+        '</div><div class="gloss">' + esc(txt.slice(0, 16)) + '</div></div>';
+    }).join('');
+  }
+
+  var bk = document.getElementById('book');
+  if (bk && vertical) bk.scrollLeft = bk.scrollWidth;
+
+  /* ---------- 影音附件（多图 / 视频 / 音乐） ---------- */
+  document.getElementById('mediaBox').innerHTML = Common.mediaHTML(a);
+  Common.fillMedia(document);
+
+  /* ---------- 底部相关：目击记录回链 ---------- */
+  var mis = (s.misreads || []).filter(function (x) {
+    return x.noteId === a.id || (x.storyIds || []).indexOf(a.id) >= 0;
+  });
+  document.getElementById('relBar').innerHTML = mis.length
+    ? '<div class="sub-head">相关的目击记录</div>' + mis.map(function (x) {
+        return '<a class="btn btn-sm" href="misread.html?id=' + encodeURIComponent(x.id) + '">' +
+          (x.kind === 'slander' ? '[诋毁 / 冠名] ' : '[误读] ') + esc(x.title) + ' ↗</a>';
+      }).join('')
+    : '';
+})();
+</script>
+</body>
+</html>

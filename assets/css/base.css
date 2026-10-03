@@ -1,0 +1,198 @@
+/* ============ AKHET · 夜间的文明档案室 ============
+   视觉方向：闭馆后的展厅。石墨黑 + 冷灰 + 单一强调色（青金石）
+   强调色由「马甲切换器」整体替换：本相 / 伏羲 / 托特 / 恩基 / 普罗米修斯 / 羽蛇神
+   底纹：细网格 + 石粒噪点 + 等高线地图纹
+   =============================================== */
+:root{
+  --bg:#0d0f12;
+  --surface:#161a1f;
+  --surface-2:#1c2128;
+  --sunk:#0a0c0f;
+
+  --ink:#e9e7e2;
+  --ink-2:#a3a9b2;
+  --ink-3:#6b727b;
+
+  --line:#242a31;
+  --line-2:#333b44;
+
+  /* 强调色（随马甲切换） */
+  --a1:#5b87cf;
+  --a2:#c8a558;
+  --a1-soft:rgba(91,135,207,.16);
+  --a2-soft:rgba(200,165,88,.16);
+
+  --clay:#c4705a;
+  --graphite:#000;
+
+  --shadow:0 1px 1px rgba(0,0,0,.4), 0 8px 24px rgba(0,0,0,.45);
+  --shadow-lg:0 2px 8px rgba(0,0,0,.5), 0 26px 60px rgba(0,0,0,.6);
+  --shadow-case:0 2px 10px rgba(0,0,0,.5), 0 34px 80px rgba(0,0,0,.7);
+
+  --sans:"PingFang SC","HarmonyOS Sans SC","Microsoft YaHei","Helvetica Neue",Helvetica,Arial,sans-serif;
+  --serif:Georgia,"Times New Roman","Songti SC",serif;
+  --mono:"SFMono-Regular",Consolas,"Roboto Mono","Courier New",monospace;
+  --nav-h:60px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+html{color-scheme:dark}
+body{
+  background:var(--bg);
+  color:var(--ink);
+  font-family:var(--sans);
+  font-size:15px;
+  line-height:1.8;
+  -webkit-font-smoothing:antialiased;
+  position:relative;
+  transition:background .45s ease;
+}
+/* 底纹一：细网格（测绘 / 档案纸） */
+body:before{
+  content:"";position:fixed;inset:0;pointer-events:none;z-index:0;
+  background-image:
+    linear-gradient(to right, rgba(233,231,226,.035) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(233,231,226,.035) 1px, transparent 1px);
+  background-size:26px 26px;
+  -webkit-mask-image:radial-gradient(ellipse 120% 90% at 50% 0%, #000 20%, transparent 92%);
+  mask-image:radial-gradient(ellipse 120% 90% at 50% 0%, #000 20%, transparent 92%);
+}
+/* 底纹二：石粒噪点 */
+body:after{
+  content:"";position:fixed;inset:0;pointer-events:none;z-index:0;opacity:.16;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E");
+}
+/* 顶部聚光：像展厅天花板的洗墙灯 */
+.wash{
+  position:fixed;left:0;right:0;top:0;height:560px;pointer-events:none;z-index:0;
+  background:radial-gradient(ellipse 60% 100% at 50% -10%, var(--a1-soft), transparent 70%);
+  transition:background .45s ease;
+}
+.page-tex{position:fixed;inset:0;z-index:0;pointer-events:none;color:var(--a1);opacity:.14}
+.page-tex.dim{opacity:.075}
+.page-tex svg{width:100%;height:100%;display:block}
+body>*{position:relative;z-index:1}
+img{max-width:100%;display:block}
+a{color:inherit;text-decoration:none}
+button{font-family:inherit}
+::selection{background:var(--a1);color:#0d0f12}
+
+/* ---------- 顶部导航 ---------- */
+.site-nav{
+  position:sticky;top:0;z-index:50;height:var(--nav-h);
+  display:flex;align-items:center;gap:10px;padding:0 26px;
+  background:rgba(13,15,18,.82);backdrop-filter:blur(14px);
+  border-bottom:1px solid var(--line);
+}
+.brand{display:flex;align-items:center;gap:12px;margin-right:20px}
+.brand .mark{
+  width:30px;height:30px;flex:none;border:1px solid var(--line-2);
+  display:grid;place-items:center;color:var(--a1);
+  font-family:var(--serif);font-size:15px;letter-spacing:.02em;
+  transition:color .45s ease,border-color .45s ease;
+}
+.brand .name{
+  font-family:var(--serif);font-size:15px;letter-spacing:.34em;
+  text-transform:uppercase;line-height:1.1;
+}
+.brand .sub{font-size:10.5px;letter-spacing:.22em;color:var(--ink-3);margin-top:2px}
+.nav-links{display:flex;gap:22px;margin-left:auto;flex-wrap:wrap}
+.nav-links a{
+  position:relative;padding:6px 0;font-size:13.5px;letter-spacing:.1em;color:var(--ink-2);
+  transition:color .18s;
+}
+.nav-links a:after{
+  content:"";position:absolute;left:0;right:0;bottom:0;height:1px;background:var(--ink);
+  transform:scaleX(0);transform-origin:left;transition:transform .22s ease;
+}
+.nav-links a:hover{color:var(--ink)}
+.nav-links a:hover:after{transform:scaleX(1)}
+.nav-links a.active{color:var(--ink)}
+.nav-links a.active:after{transform:scaleX(1);background:var(--a1);height:2px}
+.nav-links a.admin{color:var(--ink-3);font-size:12.5px}
+.nav-toggle{display:none;margin-left:auto;background:none;border:1px solid var(--line-2);
+  border-radius:2px;padding:5px 11px;color:var(--ink-2);cursor:pointer}
+
+/* ---------- 布局 ---------- */
+.wrap{max-width:1200px;margin:0 auto;padding:0 26px}
+.wrap-narrow{max-width:880px;margin:0 auto;padding:0 26px}
+.section{padding:56px 0}
+.section-sm{padding:30px 0}
+
+/* 展签式区块头 */
+.sec-head{
+  display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;
+  padding-bottom:12px;border-bottom:1px solid var(--line);margin:0 0 28px;
+}
+.sec-num{font-family:var(--mono);font-size:11px;letter-spacing:.24em;color:var(--a2)}
+.sec-title{font-size:21px;letter-spacing:.08em;font-weight:500}
+.sec-en{font-size:10px;letter-spacing:.26em;color:var(--ink-3);text-transform:uppercase;margin-left:auto}
+.eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.26em;color:var(--a2);margin-bottom:10px}
+.lede{margin:-14px 0 28px;color:var(--ink-2);font-size:14px;max-width:62ch;line-height:1.95}
+.divider{height:1px;background:var(--line);margin:38px 0}
+
+/* ---------- 通用组件 ---------- */
+.btn{
+  display:inline-flex;align-items:center;gap:8px;
+  padding:9px 18px;border-radius:2px;border:1px solid var(--line-2);
+  background:transparent;color:var(--ink);cursor:pointer;font-size:13.5px;letter-spacing:.08em;
+  transition:.18s;
+}
+.btn:hover{border-color:var(--a1);background:var(--a1);color:#0d0f12}
+.btn-primary{background:var(--ink);border-color:var(--ink);color:#0d0f12}
+.btn-primary:hover{background:var(--a1);border-color:var(--a1)}
+.btn-ghost{border-color:transparent;color:var(--ink-2)}
+.btn-ghost:hover{background:transparent;border-color:var(--line-2);color:var(--ink)}
+.btn-sm{padding:6px 13px;font-size:12.5px}
+
+.tag{
+  display:inline-block;padding:3px 8px;font-size:10.5px;letter-spacing:.14em;
+  background:var(--a1-soft);color:var(--a1);border:1px solid rgba(233,231,226,.10);border-radius:2px;
+}
+.tag-warm{background:var(--a2-soft);color:var(--a2);border-color:rgba(233,231,226,.10)}
+.tag-gold{background:rgba(233,231,226,.06);color:var(--ink-2);border-color:var(--line-2)}
+.chip{
+  padding:6px 14px;border-radius:2px;border:1px solid var(--line-2);
+  background:var(--surface);font-size:12.5px;letter-spacing:.06em;color:var(--ink-2);cursor:pointer;transition:.16s;
+}
+.chip:hover{border-color:var(--ink);color:var(--ink)}
+.chip.on{background:var(--ink);border-color:var(--ink);color:#0d0f12}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.empty{
+  padding:56px 20px;text-align:center;color:var(--ink-3);font-size:13.5px;
+  border:1px dashed var(--line-2);border-radius:2px;background:rgba(255,255,255,.02);
+}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:2px}
+
+/* ---------- 等高线地图纹 ---------- */
+.contour{position:absolute;pointer-events:none;overflow:hidden;z-index:0}
+.contour svg{display:block}
+.contour-mask{
+  -webkit-mask-image:radial-gradient(ellipse 70% 70% at 50% 50%, #000 15%, transparent 78%);
+  mask-image:radial-gradient(ellipse 70% 70% at 50% 50%, #000 15%, transparent 78%);
+}
+
+/* ---------- 页脚 ---------- */
+.site-foot{
+  margin-top:80px;padding:34px 26px 50px;border-top:1px solid var(--line);
+  color:var(--ink-3);font-size:12px;letter-spacing:.08em;text-align:center;line-height:2.2;
+}
+.site-foot a{color:var(--ink-2);border-bottom:1px solid var(--line-2)}
+.site-foot a:hover{color:var(--a1);border-color:var(--a1)}
+
+.reveal{opacity:0;transform:translateY(12px);transition:opacity .6s ease,transform .6s ease}
+.reveal.in{opacity:1;transform:none}
+
+@media(max-width:820px){
+  .nav-toggle{display:block}
+  .nav-links{
+    position:absolute;top:var(--nav-h);left:0;right:0;flex-direction:column;gap:0;
+    background:var(--surface);border-bottom:1px solid var(--line);padding:8px 20px 14px;display:none;
+    box-shadow:var(--shadow);
+  }
+  .nav-links.open{display:flex}
+  .nav-links a{padding:11px 0;border-bottom:1px solid var(--line)}
+  .nav-links a:after{display:none}
+  .sec-title{font-size:18px}
+  .sec-en{display:none}
+}

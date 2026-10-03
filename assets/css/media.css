@@ -1,0 +1,523 @@
+/* ============================================================
+   阅读器 · 书籍载体皮肤
+   外壳 = 当代展柜（冷灰石台 + 顶部聚光）
+   内页 = 那个时代、那个国家的书（暖色材质）
+   每套载体 = 底色质感 + 版式 + 字体 + 装饰件
+   竖排载体支持「横排/竖排」切换（.vertical / .horizontal）
+   ============================================================ */
+
+/* 书页内部沿用一套暖色变量，与站点的冷灰形成「展柜 vs 展品」的对比 */
+:root{
+  --kai:"Kaiti SC","STKaiti","KaiTi","楷体",serif;
+  --accent:#8f3f2b;
+  --accent-soft:#b06a4f;
+  --paper-2:#fffdf7;
+  /* 书页上的墨色：站点是深色，书页仍是浅色，必须另立一套 */
+  --p-ink:#2b2620;
+  --p-ink-2:#5f5748;
+  --p-ink-3:#8a8172;
+}
+
+.reader{
+  padding:52px 0 66px;margin-top:26px;
+  border-top:1px solid var(--line);border-bottom:1px solid var(--line);
+  background:
+    radial-gradient(ellipse 62% 44% at 50% 0%, rgba(255,255,255,.07), transparent 72%),
+    linear-gradient(180deg,#161a1f,#0b0d10);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.05);
+}
+.reader-shell{position:relative}
+.md-body{position:relative;z-index:2}
+
+/* ---------- 通用正文排版（各载体可覆盖） ---------- */
+.md-body h1,.md-body h2,.md-body h3,.md-body h4{
+  font-family:var(--kai);font-weight:700;line-height:1.6;color:inherit;margin:1.4em 0 .5em;
+}
+.md-body h1{font-size:1.5em}
+.md-body h2{font-size:1.3em}
+.md-body h3{font-size:1.13em}
+.md-body h4{font-size:1em}
+.md-body p{margin:0 0 .95em}
+.md-body blockquote{
+  margin:1em 0;padding-inline-start:1em;border-inline-start:3px solid var(--accent);
+  color:var(--p-ink-2);font-style:normal;opacity:.95;
+}
+.md-body ul,.md-body ol{margin:0 0 1em;padding-inline-start:1.6em}
+.md-body li{margin:0 0 .35em}
+.md-body hr{border:0;height:1px;background:currentColor;opacity:.25;margin:1.6em 0}
+.md-body code{font-family:var(--mono);font-size:.9em;padding:1px 5px;border-radius:4px;background:rgba(0,0,0,.06)}
+.md-body pre{
+  background:rgba(0,0,0,.06);padding:14px 16px;border-radius:8px;overflow:auto;
+  font-family:var(--mono);font-size:.86em;
+}
+.md-body pre code{background:none;padding:0}
+.md-body a{color:var(--accent);border-bottom:1px dotted currentColor}
+.md-body img.md-img{max-width:100%;border-radius:6px;margin:.6em 0}
+.md-body mark{background:rgba(168,132,47,.28);color:inherit;padding:0 2px}
+.md-body del{opacity:.6}
+.md-body .md-zhu{color:var(--accent);font-size:.92em}
+.md-body .md-note{font-size:.78em;opacity:.72;letter-spacing:.02em}
+.md-body .md-epigraph{
+  text-align:center;font-style:italic;opacity:.72;margin:0 0 1.8em;letter-spacing:.04em;
+}
+
+/* 阅读器顶部信息条 */
+.book-bar{
+  display:flex;align-items:center;gap:12px;flex-wrap:wrap;
+  margin-bottom:18px;font-size:12.5px;color:var(--ink-2);
+}
+.book-bar .bbtn{
+  padding:5px 12px;border:1px solid var(--line-2);border-radius:999px;
+  background:rgba(255,255,255,.04);color:var(--ink-2);cursor:pointer;
+  font-size:12.5px;letter-spacing:.08em;transition:.18s;
+}
+.book-bar .bbtn:hover{border-color:var(--a1);color:var(--a1);background:var(--a1-soft)}
+.book-bar .bbtn.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+.book-bar .spacer{flex:1}
+
+/* 竖排容器 */
+.reader.vertical .book{
+  writing-mode:vertical-rl;text-orientation:upright;
+  height:72vh;max-height:720px;overflow-x:auto;overflow-y:hidden;
+}
+.reader.horizontal .book{writing-mode:horizontal-tb}
+
+/* ================= 1. 泥板 · clay ================= */
+.medium-clay .book{
+  max-width:760px;margin:0 auto;padding:52px 54px 66px;
+  border-radius:18px/22px;position:relative;
+  background:
+    radial-gradient(ellipse at 22% 18%,rgba(255,255,255,.18),transparent 45%),
+    radial-gradient(ellipse at 78% 82%,rgba(90,55,25,.22),transparent 50%),
+    repeating-linear-gradient(0deg,rgba(255,255,255,.05) 0 2px,transparent 2px 6px),
+    linear-gradient(160deg,#c79a68,#b3804f 55%,#9d6f42);
+  color:#4a3320;
+  box-shadow:
+    inset 0 0 0 1px rgba(255,255,255,.12),
+    inset 0 12px 30px rgba(90,55,25,.28),
+    inset 0 -14px 30px rgba(90,55,25,.30),
+    0 22px 46px rgba(80,52,26,.35);
+}
+.medium-clay .book:before{
+  content:"";position:absolute;inset:26px;border-radius:6px;
+  background:repeating-linear-gradient(0deg,transparent 0 33px,rgba(74,51,32,.13) 33px 34px);
+  pointer-events:none;
+}
+.medium-clay .md-body{
+  font-family:var(--serif);font-size:16px;line-height:2.05;
+  text-shadow:1px 1px 0 rgba(255,255,255,.20),-1px -1px 0 rgba(60,36,16,.22);
+  letter-spacing:.06em;
+}
+.medium-clay .md-body h1,.medium-clay .md-body h2{
+  font-family:var(--serif);text-transform:none;letter-spacing:.22em;
+  text-align:center;position:relative;padding-bottom:.4em;margin-bottom:1em;
+}
+.medium-clay .md-body h1:after,.medium-clay .md-body h2:after{
+  content:"";position:absolute;left:22%;right:22%;bottom:0;height:2px;
+  background:repeating-linear-gradient(90deg,rgba(74,51,32,.5) 0 6px,transparent 6px 12px);
+}
+.medium-clay .md-body blockquote{
+  border-inline-start:0;position:relative;padding:14px 20px;margin:1.2em 0;
+  background:rgba(74,51,32,.09);border-radius:4px;
+  box-shadow:inset 0 2px 5px rgba(60,36,16,.25);
+}
+.medium-clay .md-body li{list-style:none;position:relative;padding-inline-start:1.4em}
+.medium-clay .md-body li:before{
+  content:"";position:absolute;inset-inline-start:0;top:.75em;width:0;height:0;
+  border:5px solid transparent;border-inline-end-color:rgba(74,51,32,.65);
+}
+.medium-clay .seal-imp{
+  position:absolute;right:34px;bottom:26px;width:76px;height:76px;border-radius:50%;
+  background:radial-gradient(circle at 38% 34%,#d8b184,#a9764a 70%,#8b5f37);
+  box-shadow:inset 0 0 0 4px rgba(74,51,32,.35),0 3px 8px rgba(60,36,16,.35);
+  display:grid;place-items:center;color:rgba(74,51,32,.75);
+  font-family:var(--kai);font-size:20px;letter-spacing:.1em;transform:rotate(-6deg);
+}
+
+/* ================= 2. 纸莎草卷 · papyrus ================= */
+.medium-papyrus .book-wrap{
+  background:linear-gradient(180deg,#cbb387,#b99b6d);padding:18px;border-radius:10px;
+  box-shadow:0 20px 44px rgba(80,64,34,.32);
+}
+.medium-papyrus .book{
+  max-height:74vh;overflow-x:auto;overflow-y:hidden;
+  column-width:330px;column-gap:46px;column-rule:1px solid rgba(120,88,44,.22);
+  padding:56px 42px;
+  background:
+    repeating-linear-gradient(0deg,rgba(150,110,60,.10) 0 1px,transparent 1px 4px),
+    repeating-linear-gradient(90deg,rgba(150,110,60,.09) 0 1px,transparent 1px 7px),
+    linear-gradient(170deg,#e9d5a5,#dcc289 50%,#cdb078);
+  color:#4d3a1c;
+}
+.medium-papyrus .glyph-row{
+  display:flex;justify-content:center;gap:14px;color:rgba(120,88,44,.5);font-size:15px;
+  padding:8px 0 18px;letter-spacing:.2em;
+}
+.medium-papyrus .md-body{font-family:var(--serif);font-size:16px;line-height:2}
+.medium-papyrus .md-body h1,.medium-papyrus .md-body h2{
+  text-align:center;letter-spacing:.16em;color:#7a4a17;
+}
+.medium-papyrus .md-body h1:after{
+  content:"☥";display:block;text-align:center;font-size:15px;opacity:.45;margin-top:.4em;
+}
+.medium-papyrus .md-body blockquote{
+  border-inline-start:0;border-top:1px solid rgba(120,88,44,.35);
+  border-bottom:1px solid rgba(120,88,44,.35);padding:.7em 0;text-align:center;font-style:italic;
+}
+
+/* ================= 3. 竹简 · bamboo ================= */
+.medium-bamboo .book-wrap{
+  position:relative;background:linear-gradient(180deg,#3b332a,#2b251e);
+  padding:34px 18px;border-radius:12px;box-shadow:0 22px 50px rgba(30,24,16,.45);
+}
+.medium-bamboo .cord{
+  position:absolute;left:0;right:0;height:6px;z-index:5;pointer-events:none;
+  background:repeating-linear-gradient(90deg,#7a5a33 0 6px,#5e4426 6px 12px);
+  box-shadow:0 1px 0 rgba(0,0,0,.4),0 -1px 0 rgba(255,255,255,.08);
+  opacity:.85;
+}
+.medium-bamboo .cord.c1{top:19%}
+.medium-bamboo .cord.c2{bottom:17%}
+.medium-bamboo .book{
+  display:flex;flex-direction:row-reverse;gap:5px;
+  height:70vh;max-height:700px;overflow-x:auto;overflow-y:hidden;padding:26px 12px;
+}
+.medium-bamboo .slat{
+  writing-mode:vertical-rl;text-orientation:upright;
+  height:100%;flex:none;padding:26px 9px;
+  background:linear-gradient(90deg,#e0c290,#cdab72 38%,#c09c62 62%,#b18a52);
+  border-radius:3px;position:relative;color:#2b2115;
+  box-shadow:
+    inset 2px 0 3px rgba(255,255,255,.35),
+    inset -2px 0 4px rgba(90,62,26,.35),
+    0 3px 8px rgba(0,0,0,.35);
+}
+.medium-bamboo .slat:before{
+  content:"";position:absolute;top:0;bottom:0;left:3px;width:1px;background:rgba(120,86,40,.25);
+}
+.medium-bamboo .slat:after{
+  content:"";position:absolute;top:0;bottom:0;right:3px;width:1px;background:rgba(120,86,40,.22);
+}
+.medium-bamboo .md-body{font-family:var(--kai);font-size:17px;line-height:2.1;letter-spacing:.1em}
+.medium-bamboo .md-body h1,.medium-bamboo .md-body h2{
+  font-family:var(--kai);font-size:1.05em;letter-spacing:.3em;color:#7c1f1f;
+}
+.medium-bamboo .md-body p{margin-inline-start:0}
+.medium-bamboo .md-body blockquote{border-inline-start:2px solid rgba(124,31,31,.6)}
+.medium-bamboo .md-body hr{border:0;border-inline-start:1px solid rgba(43,33,21,.4);width:0;height:auto;margin:0 .6em}
+.medium-bamboo .md-body .md-zhu{writing-mode:vertical-rl;color:#9b2b2b}
+/* 横排降级 */
+.medium-bamboo.horizontal .book{display:block;height:auto;max-height:none;overflow:visible;
+  padding:40px 34px;background:linear-gradient(180deg,#d8bd8b,#c8a771);border-radius:6px}
+.medium-bamboo.horizontal .slat{
+  writing-mode:horizontal-tb;height:auto;padding:0;margin:0 0 1em;background:none;box-shadow:none;border-radius:0;
+  border-bottom:1px dashed rgba(90,62,26,.3);
+}
+.medium-bamboo.horizontal .slat:before,.medium-bamboo.horizontal .slat:after{display:none}
+.medium-bamboo.horizontal .cord{display:none}
+
+/* ================= 4. 帛书卷轴 · silk ================= */
+.medium-silk .book-wrap{
+  position:relative;padding:0 26px;
+  background:linear-gradient(180deg,#efe6d2,#e2d5ba);border-radius:8px;
+  box-shadow:0 18px 40px rgba(90,72,40,.26);
+}
+.medium-silk .rod{
+  position:absolute;top:-8px;bottom:-8px;width:16px;border-radius:8px;
+  background:linear-gradient(90deg,#5b4325,#8a6335 40%,#4a351c);
+  box-shadow:0 3px 10px rgba(0,0,0,.35);
+}
+.medium-silk .rod.l{left:0}
+.medium-silk .rod.r{right:0}
+.medium-silk .book{
+  writing-mode:vertical-rl;text-orientation:upright;
+  height:70vh;max-height:700px;overflow-x:auto;overflow-y:hidden;padding:44px 40px;
+  background:
+    repeating-linear-gradient(90deg,transparent 0 40px,rgba(60,80,80,.14) 40px 41px),
+    repeating-linear-gradient(0deg,rgba(255,255,255,.25) 0 2px,transparent 2px 9px),
+    linear-gradient(160deg,#f4ecd7,#e7dbbe 60%,#dccfae);
+  color:#33291c;
+}
+.medium-silk .md-body{font-family:var(--kai);font-size:17px;line-height:2.1;letter-spacing:.12em}
+.medium-silk .md-body h1,.medium-silk .md-body h2{font-family:var(--kai);letter-spacing:.3em;color:#2f4f5a}
+.medium-silk .md-body blockquote{border-inline-start:2px solid rgba(47,79,90,.5)}
+.medium-silk.horizontal .book{writing-mode:horizontal-tb;height:auto;max-height:none;overflow:visible;
+  background:
+    repeating-linear-gradient(0deg,transparent 0 40px,rgba(60,80,80,.10) 40px 41px),
+    linear-gradient(160deg,#f4ecd7,#e7dbbe 60%,#dccfae)}
+
+/* ================= 5. 线装古籍 · thread ================= */
+.medium-thread .book-wrap{
+  max-width:900px;margin:0 auto;background:#f6efdd;padding:22px;border-radius:4px;
+  box-shadow:0 20px 44px rgba(70,54,26,.28);position:relative;
+}
+.medium-thread .book{
+  writing-mode:vertical-rl;text-orientation:upright;
+  height:74vh;max-height:760px;overflow-x:auto;overflow-y:hidden;padding:46px 42px;
+  background:
+    repeating-linear-gradient(90deg,transparent 0 38px,rgba(155,43,43,.16) 38px 39px),
+    linear-gradient(180deg,#fbf4e2,#f3e9cf);
+  color:#241d14;position:relative;
+}
+.medium-thread .frame{
+  position:absolute;inset:0;pointer-events:none;
+  border:2px solid rgba(36,29,20,.65);
+  box-shadow:inset 0 0 0 4px #f6efdd,inset 0 0 0 5px rgba(36,29,20,.45);
+}
+.medium-thread .fish-tail{
+  position:absolute;top:14px;left:50%;transform:translateX(-50%);
+  width:0;height:0;border-left:9px solid transparent;border-right:9px solid transparent;
+  border-top:12px solid rgba(36,29,20,.55);z-index:3;
+}
+.medium-thread .md-body{font-family:var(--serif);font-size:17px;line-height:2.15;letter-spacing:.08em}
+.medium-thread .md-body h1,.medium-thread .md-body h2{
+  font-family:var(--kai);letter-spacing:.26em;color:#7c1f1f;font-size:1.1em;
+  margin-inline-end:.6em;
+}
+.medium-thread .md-body blockquote{border-inline-start:2px solid rgba(155,43,43,.55);color:#5a4a35}
+.medium-thread .md-body .md-note{color:#7c1f1f;font-size:.7em}
+.medium-thread .stitch{
+  position:absolute;left:8px;top:0;bottom:0;width:12px;z-index:4;
+  display:flex;flex-direction:column;justify-content:space-around;pointer-events:none;
+}
+.medium-thread .stitch i{
+  display:block;width:7px;height:7px;border-radius:50%;background:#5a4a35;
+  box-shadow:inset 0 1px 2px rgba(0,0,0,.5),0 0 0 3px rgba(90,74,53,.18);margin:0 auto;
+}
+.medium-thread .stitch:before{
+  content:"";position:absolute;left:3px;top:6%;bottom:6%;width:2px;background:rgba(90,74,53,.55);
+}
+.medium-thread.horizontal .book{writing-mode:horizontal-tb;height:auto;max-height:none;overflow:visible;
+  background:
+    repeating-linear-gradient(0deg,transparent 0 38px,rgba(155,43,43,.10) 38px 39px),
+    linear-gradient(180deg,#fbf4e2,#f3e9cf)}
+.medium-thread.horizontal .fish-tail{
+  top:12px;bottom:auto;border-top:12px solid rgba(36,29,20,.5);
+}
+
+/* ================= 6. 和纸册子 · washi ================= */
+.medium-washi .book-wrap{
+  max-width:920px;margin:0 auto;padding:26px;
+  background:linear-gradient(180deg,#e9e2d3,#ded5c3);border-radius:6px;
+  box-shadow:0 18px 40px rgba(70,64,50,.24);position:relative;
+}
+.medium-washi .book{
+  writing-mode:vertical-rl;text-orientation:upright;
+  height:72vh;max-height:740px;overflow-x:auto;overflow-y:hidden;padding:48px 44px;
+  background:
+    repeating-linear-gradient(102deg,rgba(255,255,255,.5) 0 1px,transparent 1px 13px),
+    repeating-linear-gradient(78deg,rgba(190,175,145,.30) 0 1px,transparent 1px 17px),
+    repeating-linear-gradient(0deg,rgba(200,190,165,.16) 0 1px,transparent 1px 21px),
+    linear-gradient(150deg,#fbf8ef,#f3eee0);
+  color:#2c2a26;position:relative;
+}
+.medium-washi .book:after{
+  content:"";position:absolute;inset:0;pointer-events:none;
+  border:1px solid rgba(120,110,90,.28);
+  -webkit-mask-image:repeating-linear-gradient(0deg,#000 0 3px,transparent 3px 5px);
+  mask-image:repeating-linear-gradient(0deg,#000 0 3px,transparent 3px 5px);
+}
+.medium-washi .md-body{font-family:"Yu Mincho","Hiragino Mincho ProN","Songti SC",var(--serif);
+  font-size:16.5px;line-height:2.2;letter-spacing:.1em}
+.medium-washi .md-body h1,.medium-washi .md-body h2{letter-spacing:.28em;color:#3f4a63}
+.medium-washi .md-body blockquote{border-inline-start:2px solid rgba(63,74,99,.45)}
+.medium-washi .stitch{
+  position:absolute;left:10px;top:0;bottom:0;width:14px;display:flex;flex-direction:column;
+  justify-content:space-around;pointer-events:none;z-index:4;
+}
+.medium-washi .stitch i{display:block;width:5px;height:5px;border-radius:50%;background:#6b6355;margin:0 auto}
+.medium-washi .stitch:before{content:"";position:absolute;left:4px;top:8%;bottom:8%;width:1.5px;
+  background:repeating-linear-gradient(180deg,rgba(107,99,85,.7) 0 8px,transparent 8px 14px)}
+.medium-washi.horizontal .book{writing-mode:horizontal-tb;height:auto;max-height:none;overflow:visible}
+
+/* ================= 7. 羊皮手抄本 · codex ================= */
+.medium-codex .book-wrap{
+  max-width:940px;margin:0 auto;padding:24px;
+  background:linear-gradient(180deg,#7d5c33,#5c4123);border-radius:8px;
+  box-shadow:0 22px 48px rgba(60,42,20,.4);
+}
+.medium-codex .book{
+  padding:56px 58px 62px;position:relative;
+  background:
+    radial-gradient(ellipse at 12% 10%,rgba(160,120,60,.20),transparent 42%),
+    radial-gradient(ellipse at 88% 88%,rgba(140,100,50,.18),transparent 46%),
+    repeating-linear-gradient(94deg,rgba(160,130,80,.06) 0 2px,transparent 2px 6px),
+    linear-gradient(165deg,#f2e5c6,#e6d4ac 60%,#dcc89a);
+  color:#3a2c17;border-radius:3px;
+  box-shadow:inset 0 0 44px rgba(120,88,40,.30),0 4px 14px rgba(0,0,0,.28);
+}
+.medium-codex .illum{
+  position:absolute;inset:16px;border:1px solid rgba(120,88,40,.55);pointer-events:none;
+}
+.medium-codex .illum:before{
+  content:"";position:absolute;inset:5px;border:1px solid rgba(120,88,40,.30);
+}
+.medium-codex .illum i{
+  position:absolute;width:13px;height:13px;background:rgba(168,132,47,.55);
+  transform:rotate(45deg);
+}
+.medium-codex .illum i:nth-child(1){top:-7px;left:-7px}
+.medium-codex .illum i:nth-child(2){top:-7px;right:-7px}
+.medium-codex .illum i:nth-child(3){bottom:-7px;left:-7px}
+.medium-codex .illum i:nth-child(4){bottom:-7px;right:-7px}
+.medium-codex .md-body{font-family:Georgia,"Times New Roman","Songti SC",serif;font-size:16px;line-height:1.95}
+.medium-codex .md-body h1,.medium-codex .md-body h2{
+  text-align:center;font-family:Georgia,serif;color:#8d2b1e;letter-spacing:.12em;
+  font-variant:small-caps;font-size:1.35em;
+}
+.medium-codex .md-body h1:after{
+  content:"❧";display:block;text-align:center;color:rgba(168,132,47,.75);font-size:14px;margin-top:.3em;
+}
+.medium-codex .md-body p:first-of-type:first-letter,
+.medium-codex .md-body h1 + p:first-letter,
+.medium-codex .md-body h2 + p:first-letter{
+  float:left;font-family:Georgia,"Times New Roman",serif;font-size:3.4em;line-height:.82;
+  padding:6px 12px 0 0;color:#8d2b1e;
+  text-shadow:1px 1px 0 rgba(168,132,47,.6);
+}
+.medium-codex .md-body blockquote{
+  border-inline-start:0;margin:1.4em 0;padding:.8em 1.2em;
+  background:rgba(141,43,30,.07);border-top:1px solid rgba(141,43,30,.3);
+  border-bottom:1px solid rgba(141,43,30,.3);text-align:center;font-style:italic;
+}
+.medium-codex .md-body hr{
+  border:0;height:12px;background:no-repeat center/120px 12px;
+  background-image:linear-gradient(90deg,transparent,rgba(141,43,30,.5),transparent);
+  opacity:1;margin:1.8em 0;
+}
+
+/* ================= 8. 贝叶经 · palm ================= */
+.medium-palm .book-wrap{
+  max-width:820px;margin:0 auto;background:linear-gradient(180deg,#6d5c3c,#4e412a);
+  padding:26px 20px;border-radius:10px;box-shadow:0 20px 44px rgba(50,42,24,.4);position:relative;
+}
+.medium-palm .book{
+  padding:20px 0;position:relative;
+}
+.medium-palm .leaf{
+  position:relative;margin:0 0 18px;padding:22px 78px;
+  background:
+    repeating-linear-gradient(0deg,rgba(120,96,50,.10) 0 1px,transparent 1px 5px),
+    repeating-linear-gradient(96deg,rgba(120,96,50,.08) 0 1px,transparent 1px 9px),
+    linear-gradient(180deg,#e6d9a8,#d8c78d 55%,#c9b478);
+  color:#3f3418;border-radius:34px/14px;
+  box-shadow:0 2px 8px rgba(40,30,10,.35),inset 0 0 22px rgba(120,96,50,.22);
+}
+.medium-palm .leaf:before,.medium-palm .leaf:after{
+  content:"";position:absolute;top:50%;transform:translateY(-50%);
+  width:11px;height:11px;border-radius:50%;background:#4e412a;
+  box-shadow:inset 0 2px 3px rgba(0,0,0,.6);
+}
+.medium-palm .leaf:before{left:34px}
+.medium-palm .leaf:after{right:34px}
+.medium-palm .leaf .hole2{position:absolute;top:50%;transform:translateY(-50%);left:56px;
+  width:11px;height:11px;border-radius:50%;background:#4e412a;box-shadow:inset 0 2px 3px rgba(0,0,0,.6)}
+.medium-palm .cordline{
+  position:absolute;left:38px;top:0;bottom:0;width:2px;background:rgba(78,65,42,.5);
+}
+.medium-palm .md-body{font-family:"Nirmala UI","Noto Serif",Georgia,serif;font-size:16px;line-height:1.9}
+.medium-palm .md-body h1,.medium-palm .md-body h2{text-align:center;letter-spacing:.14em;color:#6b4d15}
+.medium-palm .md-body p{margin:0}
+
+/* ================= 9. 结绳记事 · quipu ================= */
+.medium-quipu .book-wrap{
+  max-width:900px;margin:0 auto;padding:30px 26px 34px;border-radius:10px;
+  background:linear-gradient(180deg,#efe6d4,#e2d6bd);
+  box-shadow:0 18px 40px rgba(70,60,40,.26);
+}
+.medium-quipu .book{position:relative;padding-top:26px}
+.medium-quipu .main-cord{
+  height:12px;border-radius:6px;margin-bottom:4px;
+  background:repeating-linear-gradient(90deg,#b99a6a 0 7px,#a5875a 7px 14px);
+  box-shadow:0 2px 4px rgba(0,0,0,.18);
+}
+.medium-quipu .quipu-grid{display:flex;gap:0;align-items:flex-start;padding-top:6px}
+.medium-quipu .pend{
+  flex:1 1 0;min-width:74px;display:flex;flex-direction:column;align-items:center;
+  position:relative;padding-top:6px;
+}
+.medium-quipu .pend .string{
+  width:4px;border-radius:2px;
+  background:linear-gradient(180deg,#8a6b45,#6f5334);
+  box-shadow:0 1px 2px rgba(0,0,0,.2);
+}
+.medium-quipu .pend .string.colored{background:linear-gradient(180deg,#9b2b2b,#7c2020)}
+.medium-quipu .pend .string.blue{background:linear-gradient(180deg,#3f6b63,#2f514b)}
+.medium-quipu .knot{
+  width:15px;height:15px;border-radius:50%;margin:9px 0;
+  background:radial-gradient(circle at 35% 32%,#d8c096,#a5875a 70%,#7d6039);
+  box-shadow:0 2px 4px rgba(0,0,0,.28),inset 0 -2px 3px rgba(0,0,0,.2);
+  position:relative;
+}
+.medium-quipu .knot:after{
+  content:"";position:absolute;inset:3px;border-radius:50%;
+  border:1px solid rgba(255,255,255,.25);
+}
+.medium-quipu .pend .gloss{
+  margin-top:12px;font-size:11.5px;line-height:1.7;color:var(--p-ink-2);text-align:center;
+  max-width:96px;opacity:.85;
+}
+.medium-quipu .trans{margin-top:30px;padding-top:20px;border-top:1px dashed rgba(90,74,53,.35)}
+.medium-quipu .trans h4{font-family:var(--kai);font-size:14px;color:var(--p-ink-3);letter-spacing:.2em;margin:0 0 12px;text-align:center}
+.medium-quipu .md-body{font-family:var(--serif);font-size:15.5px;color:var(--p-ink-2)}
+
+/* ================= 10. 铅印平装 · letterpress ================= */
+.medium-letterpress .book-wrap{
+  max-width:820px;margin:0 auto;background:#f2ecdd;padding:0;border-radius:2px;
+  box-shadow:0 18px 40px rgba(70,60,40,.26);
+}
+.medium-letterpress .book{padding:58px 64px 68px;background:linear-gradient(180deg,#faf6ea,#f2ebda);color:#221e18}
+.medium-letterpress .run-head{
+  display:flex;justify-content:space-between;font-size:11px;letter-spacing:.2em;
+  color:#8a8172;border-bottom:1px solid #ded2bc;padding-bottom:8px;margin-bottom:34px;
+}
+.medium-letterpress .md-body{
+  font-family:Georgia,"Songti SC",serif;font-size:16px;line-height:1.95;text-align:justify;
+  text-shadow:0 0 1px rgba(34,30,24,.18);
+}
+.medium-letterpress .md-body p{text-indent:2em;margin:0 0 .5em}
+.medium-letterpress .md-body h1,.medium-letterpress .md-body h2{
+  text-align:center;font-family:Georgia,serif;font-variant:small-caps;letter-spacing:.18em;
+  text-indent:0;margin:1.8em 0 1em;font-size:1.3em;
+}
+.medium-letterpress .md-body h1:first-child{margin-top:0}
+.medium-letterpress .md-body blockquote{text-indent:0;font-style:italic;border-inline-start:2px solid #b9a58a}
+.medium-letterpress .page-num{
+  text-align:center;font-size:11px;color:#8a8172;margin-top:38px;padding-top:14px;
+  border-top:1px solid #ded2bc;letter-spacing:.2em;
+}
+
+/* ================= 11. 现代电子文本 · modern ================= */
+.medium-modern .book-wrap{
+  max-width:760px;margin:0 auto;border-radius:12px;overflow:hidden;
+  border:1px solid var(--line);box-shadow:var(--shadow-lg);background:#fff;
+}
+.medium-modern .win-bar{
+  display:flex;align-items:center;gap:7px;padding:10px 14px;background:#f4f1ea;
+  border-bottom:1px solid var(--line);
+}
+.medium-modern .win-bar i{width:10px;height:10px;border-radius:50%;background:#ddd5c6;display:block}
+.medium-modern .win-bar i:first-child{background:#d98a7a}
+.medium-modern .win-bar i:nth-child(2){background:#d9c07a}
+.medium-modern .win-bar i:nth-child(3){background:#8fae86}
+.medium-modern .win-bar span{margin-left:8px;font-size:12px;color:var(--ink-3)}
+.medium-modern .book{padding:40px 46px 52px;background:#fffdf9;color:#23201c}
+.medium-modern .md-body{font-family:var(--sans);font-size:16px;line-height:1.95}
+.medium-modern .md-body h1,.medium-modern .md-body h2,.medium-modern .md-body h3{
+  font-family:var(--sans);font-weight:700;letter-spacing:0;
+}
+.medium-modern .md-body h1{font-size:1.7em}
+.medium-modern .md-body blockquote{border-inline-start:3px solid var(--teal);background:rgba(63,107,99,.06);padding:.6em 1em;border-radius:0 6px 6px 0}
+.medium-modern .md-body pre{background:#2b2721;color:#e8e0cf}
+.medium-modern .md-body pre code{color:inherit}
+
+/* ---------- 载体徽标 ---------- */
+.medium-badge{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--ink-3)}
+.medium-badge b{color:var(--a1);font-weight:600}
+
+@media(max-width:820px){
+  .medium-codex .book,.medium-letterpress .book,.medium-clay .book{padding:36px 26px 44px}
+  .medium-modern .book{padding:28px 22px 36px}
+  .medium-thread .stitch,.medium-washi .stitch{display:none}
+  .reader.vertical .book{height:78vh}
+}

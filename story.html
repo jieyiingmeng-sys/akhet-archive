@@ -1,0 +1,670 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>祂的踪迹 · AKHET</title>
+<link rel="stylesheet" href="assets/css/base.css">
+<link rel="stylesheet" href="assets/css/front.css">
+<link rel="stylesheet" href="assets/css/atlas.css">
+<script>
+(function(){try{var a=JSON.parse(localStorage.getItem('aht.avatar')||'null');if(!a)return;
+  function rgb(x){x=x.replace('#','');if(x.length===3)x=x[0]+x[0]+x[1]+x[1]+x[2]+x[2];
+    return[parseInt(x.slice(0,2),16),parseInt(x.slice(2,4),16),parseInt(x.slice(4,6),16)];}
+  function ra(x,al){var c=rgb(x);return'rgba('+c[0]+','+c[1]+','+c[2]+','+al+')';}
+  var r=document.documentElement;
+  r.style.setProperty('--a1',a.a1);r.style.setProperty('--a2',a.a2);
+  r.style.setProperty('--a1-soft',ra(a.a1,.16));r.style.setProperty('--a2-soft',ra(a.a2,.16));
+  r.setAttribute('data-avatar',a.key);}catch(e){}})();
+</script>
+</head>
+<body>
+<nav class="site-nav"><a class="brand" href="index.html"></a></nav>
+
+<main class="wrap">
+  <section class="section-sm">
+    <div class="sec-head"><span class="sec-num">01 · STORY</span><span class="sec-title">祂的踪迹</span><span class="sec-en">Atlas &amp; Timeline</span></div>
+    <p class="lede">真实世界地图上的存在记录标记。切换时代，标记与说明随之变化；点标记或名称可跳到对应事件。</p>
+    <div class="chips" id="eraBar"></div>
+  </section>
+
+  <section class="section-sm">
+    <div class="story-split">
+      <div>
+        <div class="atlas" id="atlas">
+          <div class="worldmap" id="worldmap" aria-hidden="true"></div>
+          <div class="pins" id="pins"></div>
+          <div class="map-cap">示意性线图 · 海岸线与陆上国界 · 不作为界线依据</div>
+        </div>
+        <div class="atlas-note" id="atlasNote"></div>
+      </div>
+
+      <div>
+        <div class="view-tabs" id="viewTabs">
+          <button class="on" data-v="time">历史时间轴</button>
+          <button data-v="concept">祂的概念分节点</button>
+          <button data-v="era">按时代分组</button>
+        </div>
+
+        <div class="pane-view" id="vTime">
+          <div class="vtime">
+            <div class="rail" id="rail" tabindex="0" role="scrollbar" aria-controls="tlScroll" aria-orientation="vertical" aria-label="拖动查看时间轴">
+              <div class="rail-track"><div class="rail-fill" id="railFill"></div></div>
+              <div class="rail-knob" id="railKnob"></div>
+            </div>
+            <div>
+              <div class="tl-head"><span id="scrubNow"></span><span class="dim" id="scrubCount"></span></div>
+              <div class="tl-scroll" id="tlScroll">
+                <div class="timeline" id="tlList"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="pane-view hide" id="vConcept">
+          <p class="hint">不按年代，按主题。这是祂自己的分节点。</p>
+          <div class="vtime">
+            <div class="rail" id="railConcept" tabindex="0" role="scrollbar" aria-controls="scConcept" aria-orientation="vertical" aria-label="拖动浏览概念分节点">
+              <div class="rail-track"><div class="rail-fill"></div></div>
+              <div class="rail-knob"></div>
+            </div>
+            <div>
+              <div class="tl-head"><span id="nowConcept"></span><span class="dim" id="cntConcept"></span></div>
+              <div class="tl-scroll" id="scConcept">
+                <div class="concept-list" id="cList"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="pane-view hide" id="vEra">
+          <p class="hint">每个时代下的事件超链接。</p>
+          <div class="vtime">
+            <div class="rail" id="railEra" tabindex="0" role="scrollbar" aria-controls="scEra" aria-orientation="vertical" aria-label="拖动浏览时代分组">
+              <div class="rail-track"><div class="rail-fill"></div></div>
+              <div class="rail-knob"></div>
+            </div>
+            <div>
+              <div class="tl-head"><span id="nowEra"></span><span class="dim" id="cntEra"></span></div>
+              <div class="tl-scroll" id="scEra">
+                <div class="era-groups" id="gList"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="site-foot"><div><a href="index.html">返回首页</a></div></footer>
+
+<script src="assets/js/snapshot.js"></script>
+<script src="assets/js/store.js"></script>
+<script src="assets/js/seed.js"></script>
+<script src="assets/js/worldmap.js"></script>
+<script src="assets/js/markdown.js"></script>
+<script src="assets/js/common.js"></script>
+<script>
+(function () {
+  var esc = Common.esc;
+  var s = Store.load();
+  Common.initNav('story');
+  mountWorldMap();
+
+  /* ---- 真实世界地图（等高线风线图）----
+   * 海岸线数据内置于 worldmap.js，经纬度 → 图面坐标用同一套投影，
+   * 所以标记点一定落在真实地理位置上。
+   */
+  function mountWorldMap() {
+    var host = document.getElementById('worldmap');
+    if (!host || !window.WorldMap) return;
+    var M = window.WorldMap;
+
+    var fid = 'wmWob';
+
+    /* ---- 南海诸岛示意插图 ----
+     * 按国内地图出版惯例，南海诸岛以「小图」形式置于图廓右下角，
+     * 确保南海归属表达完整。数据仍来自内置矢量，无任何在线服务。 */
+    var IW = 98, IH = 134, IM = 8;
+    var IX = M.W - IW - IM, IY = M.H - IH - IM;
+
+    var defs = '<defs><filter id="' + fid + '" x="-6%" y="-12%" width="112%" height="124%">' +
+      '<feTurbulence type="fractalNoise" baseFrequency="0.011" numOctaves="3" seed="7" result="t"/>' +
+      '<feDisplacementMap in="SourceGraphic" in2="t" scale="2.6" xChannelSelector="R" yChannelSelector="G"/>' +
+      '</filter>' +
+      '<clipPath id="wmNhClip"><rect x="' + (IX + 1) + '" y="' + (IY + 1) + '" width="' + (IW - 2) + '" height="' + (IH - 2) + '"/></clipPath>' +
+      '</defs>';
+
+    var grid = '<g class="wm-grid" fill="none" stroke-width=".7">' +
+      M.grid.map(function (d) { return '<path d="' + d + '"/>'; }).join('') + '</g>';
+
+    // 陆地填充
+    var land = '<g class="wm-land">' +
+      M.rings.map(function (r) { return '<path d="' + r.d + '"/>'; }).join('') + '</g>';
+
+    // 等高线回声：每个陆块以自身中心放大 2.4% / 5% / 8%，形成一圈圈外扩的等高线
+    function echo(scale, cls) {
+      return '<g class="' + cls + '" fill="none">' + M.rings.map(function (r) {
+        return '<path d="' + r.d + '" transform="translate(' + r.cx + ' ' + r.cy + ') scale(' + scale + ') translate(' + (-r.cx) + ' ' + (-r.cy) + ')"/>';
+      }).join('') + '</g>';
+    }
+
+    var coast = '<g class="wm-coast" fill="none">' +
+      M.rings.map(function (r) { return '<path d="' + r.d + '"/>'; }).join('') + '</g>';
+
+    /* 国界：Natural Earth 110m 中「两国共享」的内部边界（陆上国界）。
+     * 合规：台湾不作为独立国家另列；中印争议段（阿克赛钦 / 藏南）不绘制。 */
+    var borderPaths = (M.borders || []).map(function (d) { return '<path d="' + d + '"/>'; }).join('');
+    var borders = '<g class="wm-border" fill="none">' + borderPaths + '</g>';
+
+    /* 南海断续线（示意）—— 九段，仅用于表达南海诸岛归属，不作为界线依据 */
+    var NHD = [
+      [[108.6, 21.4], [109.8, 19.3]],
+      [[110.6, 17.0], [111.0, 15.3]],
+      [[112.3, 13.3], [112.7, 11.6]],
+      [[114.2, 9.7], [114.4, 8.0]],
+      [[113.9, 6.2], [113.0, 4.6]],
+      [[112.4, 3.9], [111.9, 3.5]],
+      [[114.9, 5.0], [116.2, 7.0]],
+      [[117.7, 9.2], [118.9, 12.2]],
+      [[120.0, 15.5], [121.0, 19.2]]
+    ];
+    function nhPath() {
+      if (!M.proj) return '';
+      return NHD.map(function (sg) {
+        var a = M.proj(sg[0][0], sg[0][1]), b = M.proj(sg[1][0], sg[1][1]);
+        return 'M' + a[0].toFixed(1) + ' ' + a[1].toFixed(1) + 'L' + b[0].toFixed(1) + ' ' + b[1].toFixed(1);
+      }).join('');
+    }
+
+    var inset = '';
+    if (M.proj) {
+      var pa = M.proj(105.4, 23.8), pb = M.proj(122.8, 1.6);
+      var rw = Math.max(1, pb[0] - pa[0]), rh = Math.max(1, pb[1] - pa[1]);
+      var k = Math.min((IW - 12) / rw, (IH - 26) / rh);
+      var ox = IX + (IW - rw * k) / 2, oy = IY + 16 + (IH - 16 - rh * k) / 2;
+      var tf = 'translate(' + ox.toFixed(2) + ' ' + oy.toFixed(2) + ') scale(' + k.toFixed(4) +
+        ') translate(' + (-pa[0].toFixed(2)) + ' ' + (-pa[1].toFixed(2)) + ')';
+      inset = '<g class="wm-inset">' +
+        '<rect class="wm-inset-bg" x="' + IX + '" y="' + IY + '" width="' + IW + '" height="' + IH + '"/>' +
+        '<g clip-path="url(#wmNhClip)"><g transform="' + tf + '">' +
+        '<g class="wm-inset-land">' + M.rings.map(function (r) { return '<path d="' + r.d + '"/>'; }).join('') + '</g>' +
+        '<g class="wm-inset-border" fill="none">' + borderPaths + '</g>' +
+        '<path class="wm-inset-dash" d="' + nhPath() + '"/>' +
+        (M.islands || []).map(function (p) {
+          return '<circle class="wm-isl" cx="' + p.x + '" cy="' + p.y + '" r="' + (1.3 / k).toFixed(2) + '"/>';
+        }).join('') +
+        '</g></g>' +
+        '<rect class="wm-inset-fr" x="' + (IX + 0.5) + '" y="' + (IY + 0.5) + '" width="' + (IW - 1) + '" height="' + (IH - 1) + '"/>' +
+        '<text class="wm-inset-cap" x="' + (IX + 6) + '" y="' + (IY + 12) + '">南海诸岛 · 中国</text>' +
+        '</g>';
+    }
+
+    host.innerHTML = '<svg viewBox="0 0 ' + M.W + ' ' + M.H + '" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">' +
+      defs + '<g filter="url(#' + fid + ')">' + grid +
+      echo(1.08, 'wm-e3') + echo(1.05, 'wm-e2') + echo(1.024, 'wm-e1') + land + coast + borders +
+      '</g>' + inset + '</svg>';
+    document.getElementById('atlas').style.aspectRatio = M.W + ' / ' + M.H;
+  }
+
+  var eras = s.eras || [];
+  var curEra = '';        // '' = 全部
+  var curPlace = '';
+  var curCluster = '';    // 已展开的聚合点 id
+  var curIdx = 0;
+
+  /* ---- 时代选择 ---- */
+  function renderEraBar() {
+    var host = document.getElementById('eraBar');
+    host.innerHTML = '<button class="chip' + (curEra === '' ? ' on' : '') + '" data-e="">全部时代</button>' +
+      eras.map(function (e) {
+        return '<button class="chip' + (curEra === e.id ? ' on' : '') + '" data-e="' + esc(e.id) + '">' +
+          esc(e.name) + '<i class="dim">' + esc(e.range || '') + '</i></button>';
+      }).join('');
+    host.querySelectorAll('.chip').forEach(function (b) {
+      b.onclick = function () { curEra = b.getAttribute('data-e'); curIdx = 0; curCluster = ''; renderAll(); };
+    });
+  }
+
+  function eraNote() {
+    var ps = visiblePlaces();
+    ps.forEach(function (p) { var c = pinXY(p); p._px = c.x; p._py = c.y; });
+    var n = clusterPlaces(ps).length;
+    var tail = '共 ' + ps.length + ' 处标记' +
+      (n < ps.length ? '（同类或相邻已合并为 ' + n + ' 个节点）' : '') +
+      '。带数字的点是合并节点，点开可展开列表。';
+    if (!curEra) return '全部时代 · ' + tail;
+    var e = eras.filter(function (x) { return x.id === curEra; })[0];
+    return (e ? e.name + '　' + (e.range || '') + '　—　' + (e.note || '') + '　' : '') + tail;
+  }
+
+  function visiblePlaces() {
+    return (s.places || []).filter(function (p) { return !curEra || p.eraId === curEra; });
+  }
+  function visibleTimeline() {
+    return (s.timeline || []).filter(function (t) { return !curEra || t.eraId === curEra; });
+  }
+
+  /* ---- 地图 ---- */
+  /* 把经纬度投到图面坐标，再换算成百分比，保证「地理点标对位置」 */
+  function pinXY(p) {
+    var M = window.WorldMap;
+    if (M && typeof p.lat === 'number' && typeof p.lon === 'number') {
+      var c = M.proj(p.lon, p.lat);
+      return { x: c[0] / M.W * 100, y: c[1] / M.H * 100 };
+    }
+    return { x: p.x || 50, y: p.y || 50 };   // 兼容旧数据
+  }
+
+  /* 标签防重叠：按名义容器尺寸估宽，依次尝试右/左/下/上 + 微调 */
+  function layoutLabels(ps) {
+    var CW = 640, CH = CW * (window.WorldMap ? window.WorldMap.H / window.WorldMap.W : 0.5);
+    var placed = [];
+    function rect(x, y, w, h) { return { x: x, y: y, w: w, h: h }; }
+    function hit(a, b) { return a.x < b.x + b.w && b.x < a.x + a.w && a.y < b.y + b.h && b.y < a.y + a.h; }
+    function busy(r) { for (var i = 0; i < placed.length; i++) { if (hit(r, placed[i])) return true; } return false; }
+    ps.forEach(function (p) { placed.push(rect(p._px - 1.4, p._py - 2.0, 2.8, 4.0)); });
+    var out = {};
+    ps.slice().sort(function (a, b) { return a._py - b._py; }).forEach(function (p) {
+      var w = (String(p.name || '').length * 12 + 16) / CW * 100;
+      var h = 21 / CH * 100;
+      var cands = [];
+      ['r', 'l', 'b', 't'].forEach(function (a) {
+        cands.push({ a: a, dy: 0 }, { a: a, dy: -h * 0.95 }, { a: a, dy: h * 0.95 });
+      });
+      var pick = null;
+      for (var i = 0; i < cands.length; i++) {
+        var c = cands[i], r;
+        if (c.a === 'r') r = rect(p._px + 2.4, p._py - h / 2 + c.dy, w, h);
+        else if (c.a === 'l') r = rect(p._px - 2.4 - w, p._py - h / 2 + c.dy, w, h);
+        else if (c.a === 'b') r = rect(p._px - w / 2, p._py + 2.8 + c.dy, w, h);
+        else r = rect(p._px - w / 2, p._py - 2.8 - h + c.dy, w, h);
+        r.x = Math.max(0.4, Math.min(r.x, 100 - r.w - 0.4));
+        r.y = Math.max(0.4, Math.min(r.y, 100 - h - 0.4));
+        if (!busy(r)) { pick = r; break; }
+      }
+      if (!pick) pick = rect(p._px + 2.4, p._py - h / 2, w, h);
+      placed.push(pick);
+      out[p.id] = pick;
+    });
+    return out;
+  }
+
+  /* ---- 标记聚合 ----
+   * 真实地点集中在北半球旧大陆，直接铺开必然扎堆，所以分两步合并：
+   *   1) 语义聚合：后台给标记填「聚合组」（如「行宫」），同组的合成一个点；
+   *   2) 邻近聚合：剩下的点在图面上距离过近（< CLUSTER_PX）也合成一个点。
+   * 合成后的点带数量徽标，点开后在下方展开成员列表，可逐条查看。
+   */
+  var CLUSTER_PX = 3.0;          // 图面距离阈值（占地图宽度的百分比）
+  var pinNodes = [];             // 最近一次渲染出来的节点（单标记或簇）
+
+  function clusterDist(a, b) {
+    var dx = a._px - b._px;
+    var dy = (a._py - b._py) * 0.443;          // 纵向按地图宽高比折算成同尺度
+    return Math.sqrt(dx * dx + dy * dy);
+  }
+  function clusterName(members, group) {
+    if (group) return group;
+    var heads = members.map(function (p) { return String(p.region || '').split('·')[0].trim(); }).filter(Boolean);
+    if (heads.length === members.length && heads.every(function (x) { return x === heads[0]; })) return heads[0];
+    var nm = members.map(function (p) { return p.name; });
+    return nm.length <= 2 ? nm.join(' · ') : nm[0] + ' 等 ' + nm.length + ' 处';
+  }
+  function makeCluster(members, group) {
+    var sx = 0, sy = 0;
+    members.forEach(function (p) { sx += p._px; sy += p._py; });
+    return {
+      _cluster: true,
+      id: 'cl:' + members.map(function (m) { return m.id; }).join('+'),
+      group: group || '',
+      name: clusterName(members, group),
+      members: members,
+      _px: sx / members.length,
+      _py: sy / members.length,
+      eraId: members[0].eraId
+    };
+  }
+  function clusterPlaces(ps) {
+    var used = {}, byGroup = {}, order = [], out = [], i;
+    ps.forEach(function (p) {
+      if (!p.group) return;
+      if (!byGroup[p.group]) { byGroup[p.group] = []; order.push(p.group); }
+      byGroup[p.group].push(p);
+      used[p.id] = 1;
+    });
+    order.forEach(function (g) {
+      var arr = byGroup[g];
+      out.push(arr.length > 1 ? makeCluster(arr, g) : arr[0]);
+    });
+    var buckets = [];
+    ps.filter(function (p) { return !used[p.id]; }).forEach(function (p) {
+      var hit = null;
+      for (i = 0; i < buckets.length; i++) {
+        if (buckets[i].some(function (q) { return clusterDist(p, q) < CLUSTER_PX; })) { hit = buckets[i]; break; }
+      }
+      if (hit) hit.push(p); else buckets.push([p]);
+    });
+    buckets.forEach(function (b) { out.push(b.length > 1 ? makeCluster(b, '') : b[0]); });
+    return out;
+  }
+  function nodeIds(n) {
+    return n._cluster ? n.members.map(function (m) { return m.id; }) : [n.id];
+  }
+
+  function placeNoteHTML(p) {
+    return '<div class="pn-body"><strong>' + esc(p.name) + '</strong>　<span class="dim">' + esc(p.region || '') + '</span>' +
+      (p.desc ? '<p>' + esc(p.desc) + '</p>' : '') +
+      ((p.storyIds || []).length
+        ? '<div class="lnk">' + p.storyIds.map(function (sid) {
+            var a = Store.byId('articles', sid);
+            return a ? '<a class="btn btn-sm" href="read.html?id=' + encodeURIComponent(sid) + '">' + esc(a.title) + ' ↗</a>' : '';
+          }).join('') + '</div>'
+        : '<p class="dim">这个节点没有挂故事。</p>') + '</div>';
+  }
+
+  function noteFor(n) {
+    var host = document.getElementById('atlasNote');
+    if (!n) { host.innerHTML = ''; return; }
+    if (n._cluster) {
+      var sel = n.members.filter(function (m) { return m.id === curPlace; })[0] || n.members[0];
+      host.innerHTML =
+        '<div class="pn-head"><strong>' + esc(n.name) + '</strong>　<span class="dim">' + n.members.length + ' 处合并</span></div>' +
+        '<div class="pn-list">' + n.members.map(function (m) {
+          return '<button class="pn-pick' + (m.id === sel.id ? ' on' : '') + '" data-p="' + esc(m.id) + '">' +
+            esc(m.name) + '<i class="dim">' + esc(m.region || '') + '</i></button>';
+        }).join('') + '</div>' + placeNoteHTML(sel);
+      host.querySelectorAll('.pn-pick').forEach(function (b) {
+        b.onclick = function () { pick(b.getAttribute('data-p')); };
+      });
+    } else {
+      host.innerHTML = placeNoteHTML(n);
+    }
+  }
+
+  function renderPins() {
+    var host = document.getElementById('pins');
+    var ps = visiblePlaces();
+    ps.forEach(function (p) { var c = pinXY(p); p._px = c.x; p._py = c.y; });
+    pinNodes = clusterPlaces(ps);
+    var lb = layoutLabels(pinNodes);
+    host.innerHTML = pinNodes.map(function (n) {
+      var ids = nodeIds(n), of = ids.join(',');
+      var on = ids.indexOf(curPlace) >= 0 || n.id === curCluster;
+      var has = n._cluster
+        ? n.members.some(function (m) { return (m.storyIds || []).length; })
+        : (n.storyIds || []).length;
+      var r = lb[n.id] || { x: n._px, y: n._py };
+      return '<button class="pin' + (on ? ' on' : '') + (has ? ' has-story' : '') + (n._cluster ? ' cluster' : '') +
+        (n.id === curCluster ? ' open' : '') + '" data-p="' + esc(n.id) + '" data-of="' + esc(of) + '" ' +
+        'style="left:' + n._px.toFixed(2) + '%;top:' + n._py.toFixed(2) + '%">' +
+        '<span class="dia"></span>' + (n._cluster ? '<span class="num">' + n.members.length + '</span>' : '') + '</button>' +
+        '<span class="lb' + (on ? ' on' : '') + '" data-for="' + esc(n.id) + '" ' +
+        'style="left:' + r.x.toFixed(2) + '%;top:' + r.y.toFixed(2) + '%">' + esc(n.name) + '</span>';
+    }).join('') || '<div class="atlas-empty">这个时代没有标记</div>';
+
+    host.querySelectorAll('.pin, .lb').forEach(function (b) {
+      b.onclick = function () { pick(b.getAttribute('data-for') || b.getAttribute('data-p')); };
+    });
+  }
+
+  function pick(id) {
+    var n = pinNodes.filter(function (x) { return x.id === id; })[0];
+    if (n && n._cluster) { curCluster = id; curPlace = ''; noteFor(n); renderPins(); return; }
+    // 单标记：若它属于某个簇，展开该簇并选中它
+    var cl = null;
+    if (n) {
+      cl = pinNodes.filter(function (x) { return x._cluster && x.members.indexOf(n) >= 0; })[0];
+    } else {
+      cl = pinNodes.filter(function (x) { return x._cluster && x.members.some(function (m) { return m.id === id; }); })[0];
+      n = cl ? cl.members.filter(function (m) { return m.id === id; })[0] : null;
+    }
+    curPlace = id;
+    curCluster = cl ? cl.id : '';
+    noteFor(cl || n);
+    // 跳到时间轴上第一个属于此标记的事件
+    var tl = visibleTimeline(), i = -1;
+    for (var k = 0; k < tl.length; k++) { if (tl[k].placeId === id) { i = k; break; } }
+    if (i >= 0) setIdx(i, true);
+    renderPins();
+  }
+
+  /* ---- 时间轴（左侧竖向拉轴） ---- */
+  function renderTimeline() {
+    var tl = visibleTimeline();
+    var host = document.getElementById('tlList');
+    var i = Math.min(curIdx, Math.max(0, tl.length - 1));
+    document.getElementById('scrubCount').textContent = tl.length ? (i + 1) + ' / ' + tl.length + ' 节点' : '0 个节点';
+    document.getElementById('scrubNow').textContent = tl.length
+      ? (tl[i].year || '') + '　' + tl[i].title : '（无）';
+
+    host.innerHTML = tl.map(function (t, k) {
+      var link = t.link ? ' <a class="tl-link" href="read.html?id=' + encodeURIComponent(t.link) + '">阅读 ↗</a>' : '';
+      /* 不加 reveal：这些项在内部滚动容器里，入场动画会在快速拖动时造成跳动 */
+      return '<div class="tl-item' + (k === i ? ' on' : '') + '" data-i="' + k + '">' +
+        '<div class="tl-year">' + esc(t.year || '') + (t.tag ? '　·　' + esc(t.tag) : '') + '</div>' +
+        '<h4>' + esc(t.title) + '</h4><p>' + esc(t.desc || '') + '</p>' + link + '</div>';
+    }).join('') || Common.empty('这个时代没有时间轴节点。');
+
+    host.querySelectorAll('.tl-item').forEach(function (el) {
+      el.onclick = function () { setIdx(Number(el.getAttribute('data-i')), true); };
+    });
+    if (rTime) { rTime.reset(); rTime.sync(); }
+  }
+
+  /* ---- 通用竖向拉轴 ----
+   * 拉轴本身不带刻度（视觉上要和时间节点区分开），它就是右侧内容区的滚动条：
+   * 拖动 → 直接改 scrollTop，不重排任何 DOM，所以跟手、不掉帧；
+   * 滚动 → 反过来只更新滑块位置与当前项高亮。
+   * 滑块位置与当前项用同一套线性映射（scrollTop/max ↔ i/(n-1)），
+   * 保证「拉到底 = 最后一项、拉到顶 = 第一项」严格互逆。
+   */
+  function bindRail(railId, boxId, sel, onPick) {
+    var railEl = document.getElementById(railId);
+    var box = document.getElementById(boxId);
+    if (!railEl || !box) return null;
+    var knob = railEl.querySelector('.rail-knob');
+    var fill = railEl.querySelector('.rail-fill');
+    var last = -1, ticking = false;
+
+    function items() { return box.querySelectorAll(sel); }
+    function maxTop() { return Math.max(0, box.scrollHeight - box.clientHeight); }
+    /* 滚动进度 0..1 */
+    function ratio() { var m = maxTop(); return m > 0 ? box.scrollTop / m : 0; }
+    /* 进度 → 当前项下标（与 toIndex 严格互逆） */
+    function idxOf() {
+      var n = items().length;
+      if (!n) return -1;
+      return Math.max(0, Math.min(n - 1, Math.round(ratio() * (n - 1))));
+    }
+
+    function sync() {
+      var r = ratio();
+      var H = railEl.clientHeight, KH = knob.offsetHeight || 28;
+      knob.style.top = (r * Math.max(0, H - KH)).toFixed(1) + 'px';
+      fill.style.height = (r * H).toFixed(1) + 'px';
+      var m = maxTop();
+      railEl.classList.toggle('empty', m <= 2);
+      railEl.setAttribute('aria-valuemin', '0');
+      railEl.setAttribute('aria-valuemax', '100');
+      railEl.setAttribute('aria-valuenow', String(Math.round(r * 100)));
+    }
+
+    function active() {
+      var its = items(), i = idxOf();
+      if (i < 0) return;
+      for (var j = 0; j < its.length; j++) its[j].classList.toggle('on', j === i);
+      if (i !== last) { last = i; if (onPick) onPick(i); }
+    }
+
+    function frame() { sync(); active(); }
+
+    box.addEventListener('scroll', function () {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(function () { ticking = false; frame(); });
+    }, { passive: true });
+
+    function ratioAt(y) {
+      var r = railEl.getBoundingClientRect();
+      return r.height ? Math.max(0, Math.min(1, (y - r.top) / r.height)) : 0;
+    }
+    function setRatio(v) { box.scrollTop = v * maxTop(); }
+
+    var dragging = false;
+    function begin() {
+      dragging = true;
+      railEl.classList.add('dragging');
+      try { railEl.focus({ preventScroll: true }); } catch (e) { railEl.focus(); }
+    }
+    function end() { if (!dragging) return; dragging = false; railEl.classList.remove('dragging'); }
+
+    railEl.addEventListener('mousedown', function (ev) { begin(); setRatio(ratioAt(ev.clientY)); ev.preventDefault(); });
+    window.addEventListener('mousemove', function (ev) { if (!dragging) return; setRatio(ratioAt(ev.clientY)); ev.preventDefault(); });
+    window.addEventListener('mouseup', end);
+    railEl.addEventListener('touchstart', function (ev) {
+      var t = ev.touches && ev.touches[0]; if (!t) return;
+      begin(); setRatio(ratioAt(t.clientY)); ev.preventDefault();
+    }, { passive: false });
+    railEl.addEventListener('touchmove', function (ev) {
+      var t = ev.touches && ev.touches[0]; if (!t) return;
+      setRatio(ratioAt(t.clientY)); ev.preventDefault();
+    }, { passive: false });
+    railEl.addEventListener('touchend', end);
+    railEl.addEventListener('wheel', function (ev) {
+      var m = maxTop(); if (m <= 0) return;
+      box.scrollTop = Math.max(0, Math.min(m, box.scrollTop + (ev.deltaY || 0)));
+      ev.preventDefault();
+    }, { passive: false });
+    railEl.addEventListener('keydown', function (ev) {
+      var m = maxTop(), n = items().length;
+      if (m <= 0 || !n) return;
+      var d = 0, step = n > 1 ? m / (n - 1) : m;
+      if (ev.key === 'ArrowDown') d = step;
+      else if (ev.key === 'ArrowUp') d = -step;
+      else if (ev.key === 'PageDown') d = box.clientHeight * .9;
+      else if (ev.key === 'PageUp') d = -box.clientHeight * .9;
+      else if (ev.key === 'Home') d = -m;
+      else if (ev.key === 'End') d = m;
+      else return;
+      box.scrollTop = Math.max(0, Math.min(m, box.scrollTop + d));
+      ev.preventDefault();
+    });
+
+    return {
+      box: box,
+      sync: function () { last = -1; frame(); },
+      /* 项下标 → 滚动位置（与 idxOf 互逆） */
+      toIndex: function (k) {
+        var n = items().length;
+        if (!n) return;
+        var m = maxTop();
+        box.scrollTop = n > 1 ? (Math.max(0, Math.min(n - 1, k)) / (n - 1)) * m : 0;
+      },
+      reset: function () { box.scrollTop = 0; }
+    };
+  }
+
+  function markPin() {
+    document.querySelectorAll('#pins .pin').forEach(function (b) {
+      var of = (b.getAttribute('data-of') || '').split(',');
+      b.classList.toggle('on', of.indexOf(curPlace) >= 0);
+    });
+    document.querySelectorAll('#pins .lb').forEach(function (b) {
+      var n = pinNodes.filter(function (x) { return x.id === b.getAttribute('data-for'); })[0];
+      var of = n ? nodeIds(n) : [];
+      b.classList.toggle('on', of.indexOf(curPlace) >= 0);
+    });
+  }
+
+  function paintNow() {
+    var tl = visibleTimeline();
+    var t = tl[curIdx];
+    document.getElementById('scrubCount').textContent = tl.length ? (curIdx + 1) + ' / ' + tl.length + ' 节点' : '0 个节点';
+    document.getElementById('scrubNow').textContent = tl.length ? (t.year || '') + '　' + t.title : '（无）';
+  }
+
+  function setIdx(i, scroll) {
+    var tl = visibleTimeline();
+    var t = tl[i];
+    if (!t) return;
+    curIdx = i;
+    if (t.placeId) curPlace = t.placeId;
+    markPin();
+    paintNow();
+    var its = document.querySelectorAll('#tlList .tl-item');
+    for (var j = 0; j < its.length; j++) its[j].classList.toggle('on', j === i);
+    if (scroll && rTime) rTime.toIndex(i);
+  }
+
+  /* ---- 概念分节点 ---- */
+  function sortedConcepts() {
+    return (s.concepts || []).slice().sort(function (a, b) { return (a.order || 99) - (b.order || 99); });
+  }
+  function renderConcepts() {
+    var cs = sortedConcepts();
+    document.getElementById('cList').innerHTML = cs.map(function (c) {
+      var link = c.link ? '<a class="btn btn-sm" href="read.html?id=' + encodeURIComponent(c.link) + '">相关记录 ↗</a>' : '';
+      return '<div class="concept"><div class="c-ord">' + String(c.order || '').padStart(2, '0') + '</div>' +
+        '<div><h4>' + esc(c.title) + '</h4><p>' + esc(c.desc || '') + '</p>' + link + '</div></div>';
+    }).join('') || Common.empty('还没有概念节点。到后台「概念分节点」里添加。');
+    if (rConcept) { rConcept.reset(); rConcept.sync(); }
+  }
+
+  /* ---- 按时代分组 ---- */
+  function renderGroups() {
+    document.getElementById('gList').innerHTML = eras.map(function (e) {
+      var tl = (s.timeline || []).filter(function (t) { return t.eraId === e.id; });
+      var ps = (s.places || []).filter(function (p) { return p.eraId === e.id; });
+      return '<div class="era-group"><div class="eg-head"><h4>' + esc(e.name) + '</h4>' +
+        '<span class="dim">' + esc(e.range || '') + '　·　' + ps.length + ' 处标记</span></div>' +
+        '<div class="eg-items">' + (tl.map(function (t) {
+          return t.link
+            ? '<a class="eg-item" href="read.html?id=' + encodeURIComponent(t.link) + '">' + esc(t.title) + '</a>'
+            : '<span class="eg-item no">' + esc(t.title) + '</span>';
+        }).join('') || '<span class="dim">（暂无事件）</span>') + '</div></div>';
+    }).join('') || Common.empty('还没有时代。到后台「时代」里添加。');
+    if (rEra) { rEra.reset(); rEra.sync(); }
+  }
+
+  /* ---- 三个视图各绑一条拉轴 ---- */
+  var rTime = bindRail('rail', 'tlScroll', '.tl-item', function (i) {
+    var tl = visibleTimeline(), t = tl[i];
+    if (!t) return;
+    curIdx = i;
+    if (t.placeId && t.placeId !== curPlace) { curPlace = t.placeId; markPin(); }
+    paintNow();
+  });
+  var rConcept = bindRail('railConcept', 'scConcept', '.concept', function (i) {
+    var cs = sortedConcepts(), c = cs[i];
+    document.getElementById('cntConcept').textContent = cs.length ? (i + 1) + ' / ' + cs.length + ' 节点' : '0 个节点';
+    document.getElementById('nowConcept').textContent = c ? c.title : '（无）';
+  });
+  var rEra = bindRail('railEra', 'scEra', '.era-group', function (i) {
+    var e = eras[i];
+    document.getElementById('cntEra').textContent = eras.length ? (i + 1) + ' / ' + eras.length + ' 组' : '0 组';
+    document.getElementById('nowEra').textContent = e ? (e.name + '　' + (e.range || '')) : '（无）';
+  });
+
+  /* ---- 视角切换 ---- */
+  var VIEWS = { time: 'vTime', concept: 'vConcept', era: 'vEra' };
+  document.getElementById('viewTabs').addEventListener('click', function (e) {
+    var b = e.target.closest('button'); if (!b) return;
+    var v = b.getAttribute('data-v');
+    document.querySelectorAll('#viewTabs button').forEach(function (x) { x.classList.toggle('on', x === b); });
+    Object.keys(VIEWS).forEach(function (k) {
+      document.getElementById(VIEWS[k]).classList.toggle('hide', k !== v);
+    });
+  });
+
+  function renderAll() {
+    renderEraBar();
+    document.getElementById('atlasNote').innerHTML = '<span class="dim">' + esc(eraNote()) + '</span>';
+    renderPins(); renderTimeline(); renderConcepts(); renderGroups();
+  }
+  renderAll();
+})();
+</script>
+</body>
+</html>

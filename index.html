@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>AKHET · 文明档案</title>
+<link rel="stylesheet" href="assets/css/base.css">
+<link rel="stylesheet" href="assets/css/front.css">
+<link rel="stylesheet" href="assets/css/atlas.css">
+<script>
+/* 提前套用已存马甲配色，避免刷新闪色 */
+(function(){try{var a=JSON.parse(localStorage.getItem('aht.avatar')||'null');if(!a)return;
+  function rgb(x){x=x.replace('#','');if(x.length===3)x=x[0]+x[0]+x[1]+x[1]+x[2]+x[2];
+    return[parseInt(x.slice(0,2),16),parseInt(x.slice(2,4),16),parseInt(x.slice(4,6),16)];}
+  function ra(x,al){var c=rgb(x);return'rgba('+c[0]+','+c[1]+','+c[2]+','+al+')';}
+  var r=document.documentElement;
+  r.style.setProperty('--a1',a.a1);r.style.setProperty('--a2',a.a2);
+  r.style.setProperty('--a1-soft',ra(a.a1,.16));r.style.setProperty('--a2-soft',ra(a.a2,.16));
+  r.setAttribute('data-avatar',a.key);}catch(e){}})();
+</script>
+</head>
+<body>
+<nav class="site-nav"><a class="brand" href="index.html"></a></nav>
+
+<header class="hero">
+  <div class="contour contour-mask" id="heroContour" style="color:var(--a1);opacity:.5"></div>
+  <div class="wrap hero-inner">
+    <div>
+      <div class="kicker">CIVILIZATION · ARCHIVE</div>
+      <h1 id="hName">AKHET</h1>
+      <div class="cn"><i></i><span id="hAlias"></span></div>
+      <p class="quote" id="hQuote"></p>
+      <p class="bio" id="hIntro"></p>
+      <div class="hero-actions">
+        <a class="btn btn-primary" href="story.html">祂的踪迹</a>
+        <a class="btn" href="avatars.html">祂的马甲</a>
+        <a class="btn" href="stories.html">故事全列表</a>
+      </div>
+      <div class="stat-row" id="stats"></div>
+    </div>
+    <div class="portrait-frame">
+      <div class="portrait" id="portrait" data-img=""><span class="ph" id="portraitPh">主视觉<br>待上传</span></div>
+      <div class="plate"><b>FIG.01</b><span id="plateName"></span></div>
+    </div>
+  </div>
+</header>
+
+<!-- 首页只保留头部：人物简介 / 档案目录 / 最近入藏与「关于」页重复，已移除 -->
+
+<footer class="site-foot">
+  <div>AKHET · CIVILIZATION ARCHIVE　—　角色设定归档站</div>
+  <div><a href="about.html">关于本站</a></div>
+</footer>
+
+<script src="assets/js/snapshot.js"></script>
+<script src="assets/js/store.js"></script>
+<script src="assets/js/seed.js"></script>
+<script src="assets/js/markdown.js"></script>
+<script src="assets/js/common.js"></script>
+<script>
+(function () {
+  var s = Store.load();
+  Common.initNav('home');
+  Common.mountContour('#heroContour', { rings: 16, r0: 74, step: 54, seed: 9, scale: 230 });
+
+  document.title = s.site.title + ' · 文明档案';
+  document.getElementById('hName').textContent = s.site.title;
+  document.getElementById('hAlias').textContent = s.profile.alias;
+  document.getElementById('hQuote').textContent = s.profile.quote ? '「' + s.profile.quote + '」' : '';
+  document.getElementById('hIntro').textContent = s.site.intro;
+  document.getElementById('plateName').textContent = s.profile.name;
+
+  var p = document.getElementById('portrait');
+  if (s.profile.portrait) {
+    p.setAttribute('data-img', s.profile.portrait);
+    var ph = document.getElementById('portraitPh'); if (ph) ph.remove();
+  }
+  Common.fillImages(document);
+
+  var stats = [
+    ['故事', Store.stories().length], ['笔记', Store.notes().length],
+    ['马甲', (s.relations || []).filter(Common.isAvatar).length],
+    ['时代', (s.eras || []).length],
+    ['目击记录', (s.misreads || []).length]
+  ];
+  document.getElementById('stats').innerHTML = stats.map(function (x) {
+    return '<div class="stat"><b>' + x[1] + '</b><span>' + x[0] + '</span></div>';
+  }).join('');
+})();
+</script>
+</body>
+</html>

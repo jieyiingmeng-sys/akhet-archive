@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>目击记录 · AKHET</title>
+<link rel="stylesheet" href="assets/css/base.css">
+<link rel="stylesheet" href="assets/css/front.css">
+<link rel="stylesheet" href="assets/css/atlas.css">
+<link rel="stylesheet" href="assets/css/media.css">
+<script>
+(function(){try{var a=JSON.parse(localStorage.getItem('aht.avatar')||'null');if(!a)return;
+  function rgb(x){x=x.replace('#','');if(x.length===3)x=x[0]+x[0]+x[1]+x[1]+x[2]+x[2];
+    return[parseInt(x.slice(0,2),16),parseInt(x.slice(2,4),16),parseInt(x.slice(4,6),16)];}
+  function ra(x,al){var c=rgb(x);return'rgba('+c[0]+','+c[1]+','+c[2]+','+al+')';}
+  var r=document.documentElement;
+  r.style.setProperty('--a1',a.a1);r.style.setProperty('--a2',a.a2);
+  r.style.setProperty('--a1-soft',ra(a.a1,.16));r.style.setProperty('--a2-soft',ra(a.a2,.16));
+  r.setAttribute('data-avatar',a.key);}catch(e){}})();
+</script>
+</head>
+<body>
+<nav class="site-nav"><a class="brand" href="index.html"></a></nav>
+
+<main class="wrap">
+  <section class="section-sm">
+    <div class="sec-head">
+      <span class="sec-num" id="mKind">04 · RECORD</span>
+      <span class="sec-title" id="mTitle">—</span>
+      <span class="sec-en" id="mMeta"></span>
+    </div>
+    <p class="lede" id="mSum"></p>
+  </section>
+
+  <section class="section-sm">
+    <div class="mis-split">
+      <div>
+        <div class="sec-head"><span class="sec-num">VERSIONS</span><span class="sec-title">失真的记载</span><span class="sec-en">可分版本</span></div>
+        <div class="ver-tabs" id="verTabs"></div>
+        <div class="ver-body md-body" id="verBody"></div>
+      </div>
+      <aside>
+        <div class="side-block">
+          <div class="sub-head">现实史料外链</div>
+          <div id="refs"></div>
+        </div>
+        <div class="side-block">
+          <div class="sub-head">实际对应的阿赫特笔记</div>
+          <div id="noteLink"></div>
+        </div>
+        <div class="side-block">
+          <div class="sub-head">相关故事</div>
+          <div id="storyLinks"></div>
+        </div>
+      </aside>
+    </div>
+  </section>
+
+  <div id="mediaBox"></div>
+</main>
+
+<footer class="site-foot"><div><a href="record.html">全部目击记录</a>　·　<a href="index.html">返回首页</a></div></footer>
+
+<script src="assets/js/snapshot.js"></script>
+<script src="assets/js/store.js"></script>
+<script src="assets/js/seed.js"></script>
+<script src="assets/js/markdown.js"></script>
+<script src="assets/js/common.js"></script>
+<script>
+(function () {
+  var esc = Common.esc;
+  var s = Store.load();
+  Common.initNav('record', '', true);
+
+  var m = Store.byId('misreads', Common.q('id'));
+  if (!m) {
+    document.querySelector('main').innerHTML = '<div class="wrap">' + Common.empty('找不到这条记录。') + '</div>';
+    return;
+  }
+
+  document.title = m.title + ' · 目击记录';
+  document.getElementById('mKind').textContent = '04 · ' + (m.kind === 'slander' ? 'SLANDER' : 'MISREAD');
+  document.getElementById('mTitle').textContent = m.title;
+  document.getElementById('mMeta').textContent = [m.era, m.region].filter(Boolean).join(' · ');
+  document.getElementById('mSum').textContent = m.summary || '';
+
+  var vers = m.versions || [];
+  var tabs = document.getElementById('verTabs');
+  tabs.innerHTML = vers.length
+    ? vers.map(function (v, i) { return '<button class="chip' + (i === 0 ? ' on' : '') + '" data-i="' + i + '">' + esc(v.label || '版本 ' + (i + 1)) + '</button>'; }).join('')
+    : '<span class="dim">（未分版本）</span>';
+  document.getElementById('verBody').innerHTML = vers.length ? MD.parse(vers[0].body || '') : '<p class="dim">还没有填写记载内容。</p>';
+  tabs.addEventListener('click', function (e) {
+    var b = e.target.closest('.chip'); if (!b) return;
+    var i = Number(b.getAttribute('data-i'));
+    tabs.querySelectorAll('.chip').forEach(function (x) { x.classList.toggle('on', x === b); });
+    document.getElementById('verBody').innerHTML = MD.parse(vers[i].body || '');
+  });
+
+  var refs = m.refs || [];
+  document.getElementById('refs').innerHTML = refs.length
+    ? refs.map(function (r) {
+        return r.url
+          ? '<a class="ref-link" target="_blank" rel="noopener" href="' + esc(r.url) + '">' + esc(r.label || r.url) + ' ↗</a>'
+          : '<span class="ref-link off">' + esc(r.label || '（未填链接）') + '</span>';
+      }).join('')
+    : '<div class="dim">暂无。</div>';
+
+  var note = m.noteId ? Store.byId('articles', m.noteId) : null;
+  document.getElementById('noteLink').innerHTML = note
+    ? '<a class="btn btn-sm" href="read.html?id=' + encodeURIComponent(note.id) + '">' + esc(note.title) + ' ↗</a>'
+    : '<div class="dim">未指定。</div>';
+
+  var st = (m.storyIds || []).map(function (i) { return Store.byId('articles', i); }).filter(Boolean);
+  document.getElementById('storyLinks').innerHTML = st.length
+    ? st.map(function (a) {
+        return '<a class="ref-link" href="read.html?id=' + encodeURIComponent(a.id) + '">' + esc(a.title) + ' ↗</a>';
+      }).join('')
+    : '<div class="dim">暂无。</div>';
+
+  /* ---------- 影音附件（多图 / 视频 / 音乐） ---------- */
+  document.getElementById('mediaBox').innerHTML = Common.mediaHTML(m);
+  Common.fillMedia(document);
+})();
+</script>
+</body>
+</html>

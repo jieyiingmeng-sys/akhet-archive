@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>目击记录 · AKHET</title>
+<link rel="stylesheet" href="assets/css/base.css">
+<link rel="stylesheet" href="assets/css/front.css">
+<link rel="stylesheet" href="assets/css/atlas.css">
+<script>
+(function(){try{var a=JSON.parse(localStorage.getItem('aht.avatar')||'null');if(!a)return;
+  function rgb(x){x=x.replace('#','');if(x.length===3)x=x[0]+x[0]+x[1]+x[1]+x[2]+x[2];
+    return[parseInt(x.slice(0,2),16),parseInt(x.slice(2,4),16),parseInt(x.slice(4,6),16)];}
+  function ra(x,al){var c=rgb(x);return'rgba('+c[0]+','+c[1]+','+c[2]+','+al+')';}
+  var r=document.documentElement;
+  r.style.setProperty('--a1',a.a1);r.style.setProperty('--a2',a.a2);
+  r.style.setProperty('--a1-soft',ra(a.a1,.16));r.style.setProperty('--a2-soft',ra(a.a2,.16));
+  r.setAttribute('data-avatar',a.key);}catch(e){}})();
+</script>
+</head>
+<body>
+<nav class="site-nav"><a class="brand" href="index.html"></a></nav>
+
+<main class="wrap">
+  <section class="section-sm">
+    <div class="sec-head"><span class="sec-num">04 · RECORD</span><span class="sec-title">祂的目击记录</span><span class="sec-en">Misreadings &amp; Slanders</span></div>
+    <p class="lede">祂在场，记载却失真了。这里收录两类：一是被改写的历史误读，二是恶意诋毁与张冠李戴。每条都附现实史料外链，以及祂本人笔记的回链。</p>
+  </section>
+
+  <section class="section-sm">
+    <div class="sec-head"><span class="sec-num">A</span><span class="sec-title">历史误读</span><span class="sec-en" id="cntA"></span></div>
+    <div class="mis-grid" id="listA"></div>
+  </section>
+
+  <section class="section">
+    <div class="sec-head"><span class="sec-num">B</span><span class="sec-title">诋毁与冠名混乱</span><span class="sec-en" id="cntB"></span></div>
+    <div class="mis-grid" id="listB"></div>
+  </section>
+</main>
+
+<footer class="site-foot"><div><a href="index.html">返回首页</a>　·　<a href="view.html">祂的视角</a></div></footer>
+
+<script src="assets/js/snapshot.js"></script>
+<script src="assets/js/store.js"></script>
+<script src="assets/js/seed.js"></script>
+<script src="assets/js/markdown.js"></script>
+<script src="assets/js/common.js"></script>
+<script>
+(function () {
+  var esc = Common.esc;
+  var s = Store.load();
+  Common.initNav('record');
+
+  var all = s.misreads || [];
+  var A = all.filter(function (m) { return (m.kind || 'misread') === 'misread'; });
+  var B = all.filter(function (m) { return m.kind === 'slander'; });
+  document.getElementById('cntA').textContent = A.length + ' 条';
+  document.getElementById('cntB').textContent = B.length + ' 条';
+
+  function card(m) {
+    return '<a class="mis-card reveal" href="misread.html?id=' + encodeURIComponent(m.id) + '">' +
+      '<div class="mis-meta">' + esc([m.era, m.region].filter(Boolean).join(' · ')) + '</div>' +
+      '<h3>' + esc(m.title) + '</h3>' +
+      '<p>' + esc(m.summary || '') + '</p>' +
+      '<div class="mis-foot">' +
+      '<span class="tag tag-gold">' + (m.versions || []).length + ' 个版本</span>' +
+      '<span class="tag tag-warm">' + (m.refs || []).length + ' 条来源</span>' +
+      (m.noteId ? '<span class="tag">有祂的回链</span>' : '') +
+      '</div></a>';
+  }
+
+  document.getElementById('listA').innerHTML = A.length ? A.map(card).join('') : Common.empty('暂无。');
+  document.getElementById('listB').innerHTML = B.length ? B.map(card).join('') : Common.empty('暂无。');
+  Common.reveal();
+})();
+</script>
+</body>
+</html>

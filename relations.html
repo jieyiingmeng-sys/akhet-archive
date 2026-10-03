@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>社交关系网 · AKHET</title>
+<link rel="stylesheet" href="assets/css/base.css">
+<link rel="stylesheet" href="assets/css/front.css">
+<link rel="stylesheet" href="assets/css/atlas.css">
+<script>
+(function(){try{var a=JSON.parse(localStorage.getItem('aht.avatar')||'null');if(!a)return;
+  function rgb(x){x=x.replace('#','');if(x.length===3)x=x[0]+x[0]+x[1]+x[1]+x[2]+x[2];
+    return[parseInt(x.slice(0,2),16),parseInt(x.slice(2,4),16),parseInt(x.slice(4,6),16)];}
+  function ra(x,al){var c=rgb(x);return'rgba('+c[0]+','+c[1]+','+c[2]+','+al+')';}
+  var r=document.documentElement;
+  r.style.setProperty('--a1',a.a1);r.style.setProperty('--a2',a.a2);
+  r.style.setProperty('--a1-soft',ra(a.a1,.16));r.style.setProperty('--a2-soft',ra(a.a2,.16));
+  r.setAttribute('data-avatar',a.key);}catch(e){}})();
+</script>
+</head>
+<body>
+<nav class="site-nav"><a class="brand" href="index.html"></a></nav>
+
+<main class="wrap">
+  <section class="section-sm">
+    <div class="sec-head"><span class="sec-num">05 · RELATIONS</span><span class="sec-title">社交关系网</span><span class="sec-en">Constellation</span></div>
+    <p class="lede">中心是阿赫特。这里只收「他人」——祂自己的马甲不在此列，请见「祂的马甲」。有故事的节点可以点击跳转；没有故事的节点也是档案的一部分，它说明这段关系还没被写下来。</p>
+  </section>
+
+  <section class="section-sm">
+    <div class="rel-split">
+      <div class="graph-box">
+        <div class="contour contour-mask" id="relContour" style="color:var(--a1);opacity:.28"></div>
+        <svg id="graph" viewBox="0 0 620 620" role="img" aria-label="关系放射图"></svg>
+        <div class="legend" id="legend"></div>
+      </div>
+      <div id="side">
+        <div class="sec-head"><span class="sec-num">LIST</span><span class="sec-title">分组名录</span></div>
+        <div id="groups"></div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="site-foot"><div><a href="index.html">返回首页</a>　·　<a href="avatars.html">祂的马甲</a></div></footer>
+
+<script src="assets/js/snapshot.js"></script>
+<script src="assets/js/store.js"></script>
+<script src="assets/js/seed.js"></script>
+<script src="assets/js/markdown.js"></script>
+<script src="assets/js/common.js"></script>
+<script>
+(function () {
+  var esc = Common.esc;
+  var s = Store.load();
+  Common.initNav('relations');
+  Common.mountContour('#relContour', { rings: 12, r0: 90, step: 62, seed: 14, scale: 180, satellite: false });
+
+  /* 关系网只收「他人」：阿赫特自己的马甲不在这里，见「祂的马甲」 */
+  var GROUPS = [
+    { v: 'god', t: '神族' },
+    { v: 'special', t: '特殊个体' },
+    { v: 'power', t: '位高权重的人' },
+    { v: 'mortal', t: '未被记名的普通人' }
+  ];
+  var GCOLOR = { god: '#7f8ea6', special: '#b6658f', power: '#c8a558', mortal: '#5f6770' };
+  var CX = 310, CY = 310;
+
+  var rels = (s.relations || []).filter(function (r) { return !Common.isAvatar(r); });
+  var total = rels.length || 1;
+
+  /* ---- 放射图 ---- */
+  var svg = document.getElementById('graph');
+  var out = '';
+  var a0 = -Math.PI / 2;  // 从正上方开始
+
+  GROUPS.forEach(function (g, gi) {
+    var inGroup = rels.filter(function (r) { return (r.group || 'god') === g.v; });
+    if (!inGroup.length) return;
+    var span = (inGroup.length / total) * Math.PI * 2;
+    var start = a0;
+    a0 += span;
+    inGroup.forEach(function (r, i) {
+      var ang = start + span * ((i + 0.5) / inGroup.length);
+      var rad = 150 + (i % 2) * 62 + (gi % 2) * 16;
+      var x = CX + Math.cos(ang) * rad;
+      var y = CY + Math.sin(ang) * rad;
+      var col = r.color || '#6b727b';
+      var hasStory = (r.storyIds || []).length > 0;
+      var isAv = Common.isAvatar(r);
+      var href = isAv ? 'avatar.html?id=' + encodeURIComponent(r.id)
+        : (hasStory ? 'read.html?id=' + encodeURIComponent(r.storyIds[0]) : '');
+      var anchor = x > CX ? 'start' : 'end';
+      var tx = x > CX ? x + 14 : x - 14;
+
+      out += '<line x1="' + CX + '" y1="' + CY + '" x2="' + x + '" y2="' + y + '" stroke="' + col +
+        '" stroke-opacity="' + (hasStory || isAv ? .5 : .18) + '" stroke-width="1"/>';
+      var node = '<circle cx="' + x + '" cy="' + y + '" r="' + (isAv ? 9 : 6.5) + '" fill="' + col +
+        '" fill-opacity="' + (hasStory || isAv ? 1 : .35) + '" stroke="#0d0f12" stroke-width="2"/>' +
+        '<text x="' + tx + '" y="' + (y + 4) + '" text-anchor="' + anchor + '" font-size="12.5" fill="#a3a9b2">' + esc(r.name) + '</text>';
+      out += href
+        ? '<a href="' + href + '" class="g-node"><title>' + esc(r.name + (r.role ? ' · ' + r.role : '')) + '</title>' + node + '</a>'
+        : '<g class="g-node off"><title>' + esc(r.name) + '（没有故事）</title>' + node + '</g>';
+    });
+  });
+
+  out = '<circle cx="' + CX + '" cy="' + CY + '" r="46" fill="var(--surface)" stroke="var(--a1)" stroke-width="1.5"/>' +
+    '<circle cx="' + CX + '" cy="' + CY + '" r="62" fill="none" stroke="var(--line-2)" stroke-dasharray="2 5"/>' +
+    '<text x="' + CX + '" y="' + (CY - 2) + '" text-anchor="middle" font-size="15" fill="#e9e7e2" font-family="Georgia,serif">' + esc(s.profile.name) + '</text>' +
+    '<text x="' + CX + '" y="' + (CY + 16) + '" text-anchor="middle" font-size="9" fill="#6b727b" letter-spacing="2">AKHET</text>' +
+    out;
+  svg.innerHTML = out;
+
+  document.getElementById('legend').innerHTML = GROUPS.map(function (g) {
+    var c = rels.filter(function (r) { return (r.group || 'god') === g.v; }).length;
+    return '<span class="lg"><i style="background:' + (GCOLOR[g.v] || '#6b727b') + '"></i>' + esc(g.t) + '　<b>' + c + '</b></span>';
+  }).join('');
+
+  /* ---- 分组名录 ---- */
+  document.getElementById('groups').innerHTML = GROUPS.map(function (g) {
+    var list = rels.filter(function (r) { return (r.group || 'god') === g.v; });
+    if (!list.length) return '';
+    return '<div class="rel-group reveal"><div class="rg-head">' + esc(g.t) + '<span class="dim">' + list.length + '</span></div>' +
+      list.map(function (r) {
+        var isAv = Common.isAvatar(r);
+        var hasStory = (r.storyIds || []).length > 0;
+        var href = isAv ? 'avatar.html?id=' + encodeURIComponent(r.id)
+          : (hasStory ? 'read.html?id=' + encodeURIComponent(r.storyIds[0]) : '');
+        var inner = '<strong style="color:' + (r.color || '#6b727b') + '">' + esc(r.name) + '</strong>' +
+          (r.role ? '<span class="dim">　' + esc(r.role) + '</span>' : '') +
+          '<p>' + esc(r.desc || '') + '</p>';
+        return href ? '<a class="rg-item" href="' + href + '">' + inner + '</a>'
+          : '<div class="rg-item off">' + inner + '<span class="dim">（没有故事）</span></div>';
+      }).join('') + '</div>';
+  }).join('') || Common.empty('还没有人物关系。到后台「马甲与关系」里添加。');
+
+  Common.reveal();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>网友作品 · AKHET</title>
+<link rel="stylesheet" href="assets/css/base.css">
+<link rel="stylesheet" href="assets/css/front.css">
+<link rel="stylesheet" href="assets/css/atlas.css">
+<script>
+(function(){try{var a=JSON.parse(localStorage.getItem('aht.avatar')||'null');if(!a)return;
+  function rgb(x){x=x.replace('#','');if(x.length===3)x=x[0]+x[0]+x[1]+x[1]+x[2]+x[2];
+    return[parseInt(x.slice(0,2),16),parseInt(x.slice(2,4),16),parseInt(x.slice(4,6),16)];}
+  function ra(x,al){var c=rgb(x);return'rgba('+c[0]+','+c[1]+','+c[2]+','+al+')';}
+  var r=document.documentElement;
+  r.style.setProperty('--a1',a.a1);r.style.setProperty('--a2',a.a2);
+  r.style.setProperty('--a1-soft',ra(a.a1,.16));r.style.setProperty('--a2-soft',ra(a.a2,.16));
+  r.setAttribute('data-avatar',a.key);}catch(e){}})();
+</script>
+</head>
+<body>
+<nav class="site-nav"><a class="brand" href="index.html"></a></nav>
+
+<main class="wrap">
+  <section class="section-sm">
+    <div class="sec-head"><span class="sec-num">08 · FANWORKS</span><span class="sec-title">网友作品</span><span class="sec-en">By Readers</span></div>
+    <p class="lede">主创精选在上，全部作品在下。按 tag 筛选。</p>
+  </section>
+
+  <section class="section-sm">
+    <div class="sec-head"><span class="sec-num">FEATURED</span><span class="sec-title">主创精选</span></div>
+    <div class="fan-grid" id="featured"></div>
+  </section>
+
+  <section class="section">
+    <div class="sec-head"><span class="sec-num">ALL</span><span class="sec-title">全部作品</span><span class="sec-en" id="cnt"></span></div>
+    <div class="filter-bar" id="tagWrap"></div>
+    <div class="fan-grid" id="wall"></div>
+  </section>
+</main>
+
+<footer class="site-foot"><div><a href="index.html">返回首页</a></div></footer>
+
+<div class="lightbox" id="lb"><span class="lb-close">×</span><img id="lbImg" alt=""><div class="lb-cap" id="lbCap"></div></div>
+
+<script src="assets/js/snapshot.js"></script>
+<script src="assets/js/store.js"></script>
+<script src="assets/js/seed.js"></script>
+<script src="assets/js/markdown.js"></script>
+<script src="assets/js/common.js"></script>
+<script>
+(function () {
+  var esc = Common.esc;
+  var s = Store.load();
+  Common.initNav('fanworks');
+
+  var all = s.fans || [];
+  var tags = [];
+  all.forEach(function (f) { (f.tags || []).forEach(function (t) { if (tags.indexOf(t) < 0) tags.push(t); }); });
+
+  function card(f) {
+    return '<div class="fan-card reveal">' +
+      '<span class="fan-img zoomin' + (f.imageId ? '' : ' no-img') + '" data-img="' + esc(f.imageId || '') + '"></span>' +
+      '<div class="fan-body"><strong>' + esc(f.title) + '</strong>' +
+      (f.author ? '<span class="dim">　by ' + esc(f.author) + '</span>' : '') +
+      ((f.tags || []).length ? '<div class="chips">' + f.tags.map(function (x) { return '<span class="tag tag-gold">' + esc(x) + '</span>'; }).join('') + '</div>' : '') +
+      (f.url ? '<a class="btn btn-sm" target="_blank" rel="noopener" href="' + esc(f.url) + '">原链接 ↗</a>' : '') +
+      '</div></div>';
+  }
+
+  var feat = all.filter(function (f) { return f.featured; });
+  document.getElementById('featured').innerHTML = feat.length
+    ? feat.map(card).join('') : Common.empty('还没有精选。到后台「网友作品」里勾选「主创精选」。');
+
+  var host = document.getElementById('wall');
+  function paint(cur) {
+    var list = all.filter(function (f) { return Common.matchTags(f, cur || []); });
+    document.getElementById('cnt').textContent = list.length + ' / ' + all.length;
+    host.innerHTML = list.length ? list.map(card).join('') : Common.empty('没有符合条件的作品。');
+    Common.fillImages(host); Common.reveal(host);
+  }
+  document.getElementById('tagWrap').appendChild(Common.tagBar(tags, paint));
+  paint([]);
+  Common.fillImages(document.getElementById('featured'));
+  Common.reveal(document.getElementById('featured'));
+
+  var lb = document.getElementById('lb');
+  document.addEventListener('click', function (e) {
+    var c = e.target.closest('.zoomin');
+    if (c) {
+      var u = c.style.backgroundImage.slice(5, -2);
+      if (u) { document.getElementById('lbImg').src = u; lb.classList.add('open'); }
+      return;
+    }
+    if (e.target.closest('.lb-close') || e.target.id === 'lb') lb.classList.remove('open');
+  });
+})();
+</script>
+</body>
+</html>

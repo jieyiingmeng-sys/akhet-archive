@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>关于本站 · AKHET</title>
+<link rel="stylesheet" href="assets/css/base.css">
+<link rel="stylesheet" href="assets/css/front.css">
+<link rel="stylesheet" href="assets/css/atlas.css">
+<script>
+(function(){try{var a=JSON.parse(localStorage.getItem('aht.avatar')||'null');if(!a)return;
+  function rgb(x){x=x.replace('#','');if(x.length===3)x=x[0]+x[0]+x[1]+x[1]+x[2]+x[2];
+    return[parseInt(x.slice(0,2),16),parseInt(x.slice(2,4),16),parseInt(x.slice(4,6),16)];}
+  function ra(x,al){var c=rgb(x);return'rgba('+c[0]+','+c[1]+','+c[2]+','+al+')';}
+  var r=document.documentElement;
+  r.style.setProperty('--a1',a.a1);r.style.setProperty('--a2',a.a2);
+  r.style.setProperty('--a1-soft',ra(a.a1,.16));r.style.setProperty('--a2-soft',ra(a.a2,.16));
+  r.setAttribute('data-avatar',a.key);}catch(e){}})();
+</script>
+</head>
+<body>
+<nav class="site-nav"><a class="brand" href="index.html"></a></nav>
+
+<main class="wrap">
+  <section class="section-sm">
+    <div class="sec-head"><span class="sec-num">ABOUT</span><span class="sec-title">关于本站</span><span class="sec-en">How This Archive Works</span></div>
+    <div class="prose md-body" id="about"></div>
+  </section>
+
+  <section class="section">
+    <div class="sec-head"><span class="sec-num">SITEMAP</span><span class="sec-title">一级栏目</span><span class="sec-en">Nine Sections</span></div>
+    <div class="entry-grid" id="map"></div>
+  </section>
+
+  <section class="section">
+    <div class="sec-head"><span class="sec-num">MEDIA</span><span class="sec-title">书籍载体清单</span><span class="sec-en">Era × Region</span></div>
+    <p class="lede">文章与笔记点开后，会以所属时代与国家的书籍形态出现。载体在后台「故事 / 祂的笔记」里逐篇指定。</p>
+    <table class="field-table" id="mediaTable"></table>
+  </section>
+
+  <section class="section">
+    <div class="sec-head"><span class="sec-num">MARKDOWN</span><span class="sec-title">正文语法速查</span></div>
+    <table class="field-table">
+      <tr><th># ~ ######</th><td>标题</td></tr>
+      <tr><th>**粗** / *斜*</th><td>强调</td></tr>
+      <tr><th>&gt; 引用</th><td>引文块</td></tr>
+      <tr><th>- 项 / 1. 项</th><td>列表</td></tr>
+      <tr><th>---</th><td>分割线</td></tr>
+      <tr><th>::题记::</th><td>开篇题记（独立样式）</td></tr>
+      <tr><th>{{夹注}}</th><td>行间小字夹注</td></tr>
+      <tr><th>%%朱批%%</th><td>朱批（红色批注）</td></tr>
+      <tr><th>![](图片)</th><td>插图</td></tr>
+    </table>
+  </section>
+
+  <section class="section">
+    <div class="sec-head"><span class="sec-num">STORAGE</span><span class="sec-title">存储说明</span></div>
+    <div class="prose">
+      <p>这是一个纯静态站点：没有后端、没有构建步骤、不联网也能跑。双击 HTML 或起一个本地静态服务都可以。</p>
+      <p>文字数据存在浏览器 localStorage（key <code>aht.v1</code>）；图片存在 IndexedDB（库 <code>aht_imgs</code>），写不进去时自动降级为 base64 存 localStorage。</p>
+      <p>换设备或清缓存之前，请到后台「备份」导出一份 JSON。JSON 不含图片二进制，图片需要另行保存。</p>
+      <p>管理后台不放在任何导航或页脚里，普通游客看不到入口、也进不去编辑。站主直接用隐藏网址 <code>poor-dot-created.html</code> 打开即可进入编辑，无需口令。改动即时存到本机浏览器本地（localStorage / IndexedDB）；要做对外只读发布，去后台「备份 → 发布访客版」生成 snapshot.js 覆盖即可。</p>
+    </div>
+  </section>
+</main>
+
+<footer class="site-foot"><div><a href="index.html">返回首页</a></div></footer>
+
+<script src="assets/js/snapshot.js"></script>
+<script src="assets/js/store.js"></script>
+<script src="assets/js/seed.js"></script>
+<script src="assets/js/markdown.js"></script>
+<script src="assets/js/common.js"></script>
+<script>
+(function () {
+  var esc = Common.esc;
+  var s = Store.load();
+  Common.initNav('about');
+
+  document.getElementById('about').innerHTML = MD.parse(s.site.about || '');
+  document.title = '关于本站 · ' + s.site.title;
+
+  var M = [
+    ['01', 'STORY', '祂的踪迹', '地图 + 时间轴，可切换时代与「概念分节点」视角。', 'story.html'],
+    ['02', 'AVATARS', '祂的马甲', '五个马甲，各自配色与相关故事。', 'avatars.html'],
+    ['03', 'VIEW', '祂的视角', '祂自己的笔记。', 'view.html'],
+    ['04', 'RECORD', '目击记录', '历史误读 / 诋毁与冠名混乱，含外链与回链。', 'record.html'],
+    ['05', 'RELATIONS', '社交关系网', '放射图 + 分组名录。', 'relations.html'],
+    ['06', 'THINGS', '祂的东西', '持有物 / 产业 / 作品。', 'things.html'],
+    ['07', 'STORIES', '故事全列表', 'tag 检索。', 'stories.html'],
+    ['08', 'FANWORKS', '网友作品', '精选 + tag 筛选。', 'fanworks.html'],
+    ['09', 'GALLERY', '插画', '立绘与设定图。', 'gallery.html']
+  ];
+  document.getElementById('map').innerHTML = M.map(function (m) {
+    return '<a class="entry reveal" href="' + m[4] + '"><div class="e-num">' + m[0] + '　' + m[1] + '</div>' +
+      '<h3>' + m[2] + '</h3><p>' + m[3] + '</p></a>';
+  }).join('');
+
+  document.getElementById('mediaTable').innerHTML =
+    '<tr><th>载体</th><th>时代</th><th>地区</th><th>形态说明</th></tr>' +
+    Store.MEDIUMS.map(function (m) {
+      return '<tr><td><b>' + esc(m.name) + '</b><br><span style="font-family:var(--mono);font-size:10.5px;color:var(--ink-3)">' + esc(m.id) + '</span></td>' +
+        '<td>' + esc(m.era) + '</td><td>' + esc(m.region) + '</td><td>' + esc(m.hint) + '</td></tr>';
+    }).join('');
+
+  Common.reveal();
+})();
+</script>
+</body>
+</html>
