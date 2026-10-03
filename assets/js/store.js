@@ -273,8 +273,9 @@
   function exportJSON() { return JSON.stringify(load(), null, 2); }
   function importJSON(txt) { reset(JSON.parse(txt)); return load(); }
 
-  /* 生成访客版快照：数据 + 全部图片（base64）打包成一个可上传的 JS 文件 */
-  function exportSnapshot() {
+  /* 生成访客版快照：数据 + 全部图片（base64）打包。buildSnapshot 返回纯对象，
+   * exportSnapshot 产出可覆盖 assets/js/snapshot.js 的 JS 文本，exportCloud 供后台 PUT 到云端。 */
+  function buildSnapshot() {
     var d = load();
     var ids = {};
     JSON.stringify(d).replace(/"((?:img|med)_[A-Za-z0-9]+)"/g, function (m, id) { ids[id] = 1; return m; });
@@ -296,6 +297,12 @@
       out.__imgs = imgs;
       out.__at = new Date().toISOString().slice(0, 10);
       delete out.dirty; delete out.version;
+      return out;
+    });
+  }
+  /* 生成可覆盖 assets/js/snapshot.js 的访客版快照文件 */
+  function exportSnapshot() {
+    return buildSnapshot().then(function (out) {
       return '/* 访客版快照 —— 由后台「发布」生成（' + out.__at + '）\n' +
         ' * 本文件存在时，全站只读：内容照常浏览，但改不动数据。\n' +
         ' * 管理员在网址后加 #edit（或后台点「进入编辑模式」）即切回本地可写数据。\n' +
@@ -303,6 +310,8 @@
         'window.SNAPSHOT = ' + JSON.stringify(out) + ';\n';
     });
   }
+  /* 云端发布用的纯数据对象（不含 JS 包装） */
+  function exportCloud() { return buildSnapshot(); }
 
   /* ---------- 辅助 ---------- */
   function medium(id) {
@@ -382,7 +391,7 @@
     load: load, save: save, reset: reset, markDirty: markDirty,
     putImage: putImage, imageURL: imageURL, delImage: delImage,
     putMedia: putMedia, mediaURL: mediaURL, delMedia: delMedia,
-    exportJSON: exportJSON, importJSON: importJSON, exportSnapshot: exportSnapshot,
+    exportJSON: exportJSON, importJSON: importJSON, exportSnapshot: exportSnapshot, exportCloud: exportCloud,
     isReadOnly: isReadOnly,
     medium: medium, allTags: allTags, byId: byId,
     stories: stories, notes: notes, readables: readables, crossLinked: crossLinked

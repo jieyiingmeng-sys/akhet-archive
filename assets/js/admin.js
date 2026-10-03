@@ -904,8 +904,10 @@
       '<label><span>导入 JSON（粘贴后点导入）</span><textarea id="im" class="md" placeholder="把之前导出的 JSON 粘到这里"></textarea></label>' +
       '<div class="row"><button class="btn" id="imgo">导入</button></div>' +
       '<div class="sec-head"><span class="sec-num">访客版</span><span class="sec-title">发布 / 撤销只读快照</span></div>' +
-      '<p class="hint">「发布」会把当前全部内容（含图片）打包成 <b>snapshot.js</b> 下载下来。把它覆盖到网站的 <b>assets/js/snapshot.js</b>，别人打开网站就只能看、改不动（数据与图片都封在快照里）。你自己想改：在网址末尾加上 <b>#edit</b> 刷新即可；改完在这里重新发布一次覆盖旧快照。</p>' +
-      '<div class="row"><button class="btn primary" id="pub">发布访客版（导出只读快照）</button>' +
+      '<p class="hint">两种发布方式：<b>① 导出只读快照</b>把 snapshot.js 下载下来，覆盖到仓库后由 AI 代上线（适合不想碰后台配置时）；<b>② 发布到云端</b>直接把内容写到站点的 Cloudflare KV，所有访客刷新即见，无需动仓库（需先填下方「发布令牌」，令牌要与 Cloudflare 后台设置的 PUBLISH_TOKEN 一致）。</p>' +
+      '<label><span>发布令牌（仅存本机浏览器，不进仓库）</span><input id="tok" class="md" type="password" placeholder="与 Cloudflare 后台 PUBLISH_TOKEN 一致" value="' + esc(localStorage.getItem('aht.pubtok') || '') + '"></label>' +
+      '<div class="row"><button class="btn" id="pub">导出只读快照</button>' +
+      '<button class="btn primary" id="pubc">发布到云端（一键上线）</button>' +
       '<span id="pubState" class="dim"></span></div>';
 
     $('#ex', host).onclick = function () {
@@ -930,6 +932,7 @@
     };
     var snap = window.SNAPSHOT ? '已发布（' + esc(window.SNAPSHOT.__at || '') + '）' : '未发布（当前站点可编辑）';
     $('#pubState', host).innerHTML = snap;
+    $('#tok', host).oninput = function () { localStorage.setItem('aht.pubtok', $('#tok', host).value); };
     $('#pub', host).onclick = function () {
       $('#pubState', host).textContent = '正在打包图片…';
       Store.exportSnapshot().then(function (txt) {
@@ -938,9 +941,22 @@
         a.href = URL.createObjectURL(blob);
         a.download = 'snapshot.js';
         a.click();
-        $('#pubState', host).innerHTML = '已导出，覆盖到 assets/js/snapshot.js 后生效';
+        $('#pubState', host).innerHTML = '已导出 snapshot.js，覆盖到仓库 assets/js/snapshot.js 后生效';
       }).catch(function (e) {
         $('#pubState', host).textContent = '打包失败：' + (e && e.message || e);
+      });
+    };
+    $('#pubc', host).onclick = function () {
+      var tok = $('#tok', host).value;
+      if (!tok) { alert('请先填写发布令牌（与 Cloudflare 后台 PUBLISH_TOKEN 一致）'); return; }
+      $('#pubState', host).textContent = '正在打包并上传云端…';
+      Store.exportCloud().then(function (obj) {
+        return AHT_CLOUD.publish(obj, tok);
+      }).then(function (r) {
+        if (r === 'ok') $('#pubState', host).innerHTML = '已发布到云端 ✅ 访客刷新即见（约数秒）';
+        else $('#pubState', host).textContent = '发布失败：' + r;
+      }).catch(function (e) {
+        $('#pubState', host).textContent = '发布出错：' + (e && e.message || e);
       });
     };
   }

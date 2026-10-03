@@ -75,7 +75,7 @@ aht-archive/
 ├── fanworks.html   网友作品      gallery.html  插画
 ├── read.html       阅读器（书籍载体）
 ├── about.html      关于           admin.html   后台
-└── assets/
+├── assets/
     ├── css/
     │   ├── base.css    全站主题（深色夜间展厅）、导航、底纹
     │   ├── front.css   首页 / 封面墙 / 画廊等前台组件
@@ -88,7 +88,9 @@ aht-archive/
         ├── worldmap.js 世界地图线图数据（Natural Earth 110m 海岸线 + 投影 / 逆投影）
         ├── markdown.js 自研 Markdown 解析器（含自定义语法）
         ├── common.js   导航、马甲配色、等高线底纹、封面卡、标签筛选
-        └── admin.js    后台：schema 驱动的通用 CRUD + 文章编辑器 + 地图取点器
+        ├── admin.js    后台：schema 驱动的通用 CRUD + 文章编辑器 + 地图取点器
+        └── cloud.js    云端只读预取 + 一键发布（Cloudflare Pages + KV）
+└── functions/   Cloudflare Pages Function：/api/data 读写 KV（云端发布后端）
 ```
 
 ---
@@ -168,6 +170,27 @@ aht-archive/
 
 ---
 
-## 七、已验证
+## 七、云端发布（一键更新，不碰仓库）
+
+编辑在后台（`poor-dot-created.html` / `admin.html`）照常做，改的是本机浏览器。要让所有访客看到，有两种发布方式：
+
+- **方式 ② 发布到云端（推荐，一键）**：后台「备份 → 发布到云端（一键上线）」会把当前全部内容（含图片 base64）PUT 到站点的 Cloudflare KV，所有访客刷新即见，**无需动仓库、无需找 AI**。前提是 Cloudflare 后台已绑定 KV 并设好 `PUBLISH_TOKEN`（见下）。
+- **方式 ① 导出只读快照**：后台「备份 → 导出只读快照」下载 `snapshot.js`，覆盖仓库 `assets/js/snapshot.js` 后由维护者推送上线。适合不想配置 KV 时。
+
+云端发布依赖 Cloudflare Pages Functions（`functions/api/data.js`）+ KV 命名空间 `AKHET_KV` + 环境变量 `PUBLISH_TOKEN`：
+
+1. Cloudflare 后台 → Storage → KV → 新建命名空间（如 `akhet-archive-data`）。
+2. 项目 Settings → Functions → KV namespace bindings → 绑定变量名 `AKHET_KV` 到该命名空间。
+3. 项目 Settings → Environment variables → 增加 `PUBLISH_TOKEN`（生产环境），值取一段自己想的强随机串。
+4. 改完点 Save 后务必「Retry deployment」一次，让绑定/变量生效。
+5. 后台「备份」里把同一串 `PUBLISH_TOKEN` 填进「发布令牌」（仅存本机浏览器，不进仓库），点「发布到云端」即可。
+
+访客端 `cloud.js` 在渲染前同步 GET `/api/data`；命中则写入 `window.SNAPSHOT`，全站自动只读展示云端内容。后台页 / `#edit` 跳过云端、直接用本地可写数据。KV 不可用（未绑定 / 离线）时静默退回种子或本地数据。
+
+> 注意：KV 单值上限约 25 MB。图片以 base64 内嵌，图很多或原图很大时可能超限——发布前把图片压到网页可用尺寸（长边 ≤ 1600px 左右）即可。若仍需更大容量，改用「方式 ① 导出快照」或把图片作为静态文件放进仓库。
+
+---
+
+## 八、已验证
 
 jsdom 冒烟测试 **133 项全通过**：九个栏目首页渲染、马甲页卡片与详情配色、顶部切换条确已移除、世界地图海岸线 / 经纬网 / 苏美尔点位真实投影校验、竖向拉轴刻度、地图时代切换、误读版本切换、置物架联动、tag 与关键词检索、8 套阅读器载体、后台 15 个面板的增删改、地图取点器与 Markdown 实时预览。
