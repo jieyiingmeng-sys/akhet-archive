@@ -29,6 +29,10 @@
 .reader-shell{position:relative}
 .md-body{position:relative;z-index:2}
 
+/* ---------- 阅读页顶部封面图（封面形式 = 插画时） ---------- */
+.read-cover{margin:0 0 18px}
+.read-cover img.md-img{display:block;width:100%;max-height:62vh;object-fit:cover;border-radius:6px}
+
 /* ---------- 通用正文排版（各载体可覆盖） ---------- */
 .md-body h1,.md-body h2,.md-body h3,.md-body h4{
   font-family:var(--kai);font-weight:700;line-height:1.6;color:inherit;margin:1.4em 0 .5em;

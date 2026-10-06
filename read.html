@@ -148,9 +148,16 @@
   html += '</div>';
   shell.innerHTML = html;
 
+  /* 封面形式为「插画」时，阅读页顶部也渲染封面图（列表卡片之外此前一直不显示） */
+  if (a.coverType === 'image' && a.coverImage) {
+    shell.insertAdjacentHTML('afterbegin',
+      '<figure class="read-cover"><img class="md-img" data-img="' + esc(a.coverImage) + '" alt="' + esc(a.title || '封面') + '"></figure>');
+  }
+
   var body = document.getElementById('body');
   body.innerHTML = MD.parse(a.body || '_（本文还没有正文）_');
   Common.fillImages(body);
+  Common.fillImages(shell);   /* 连同顶部封面图一起填充 */
 
   /* ---------- 分简 / 分页 ---------- */
   if (a.medium === 'bamboo') {

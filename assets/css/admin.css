@@ -151,7 +151,7 @@ textarea.md{min-height:420px;font-family:var(--mono);font-size:13px;line-height:
 
 .img-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px}
 .img-cell{border:1px solid var(--line);border-radius:2px;overflow:hidden;background:var(--surface)}
-.img-cell .thumb{aspect-ratio:1/1;background:var(--sunk) center/cover no-repeat;position:relative}
+.img-cell .thumb{display:block;width:100%;aspect-ratio:1/1;background:var(--sunk) center/cover no-repeat;position:relative}
 .img-cell .thumb.no-img{
   display:grid;place-items:center;color:var(--ink-3);font-size:12px;
   background:repeating-linear-gradient(45deg,#15191e 0 10px,#10141a 10px 20px);
