@@ -29,10 +29,6 @@
 .reader-shell{position:relative}
 .md-body{position:relative;z-index:2}
 
-/* ---------- 阅读页顶部封面图（封面形式 = 插画时） ---------- */
-.read-cover{margin:0 0 18px}
-.read-cover img.md-img{display:block;width:100%;max-height:62vh;object-fit:cover;border-radius:6px}
-
 /* ---------- 通用正文排版（各载体可覆盖） ---------- */
 .md-body h1,.md-body h2,.md-body h3,.md-body h4{
   font-family:var(--kai);font-weight:700;line-height:1.6;color:inherit;margin:1.4em 0 .5em;
@@ -56,7 +52,11 @@
 }
 .md-body pre code{background:none;padding:0}
 .md-body a{color:var(--accent);border-bottom:1px dotted currentColor}
-.md-body img.md-img{max-width:100%;border-radius:6px;margin:.6em 0}
+/* 正文插图：等比缩放到合适大小（限宽 30em、限高 70vh，不裁剪，居中） */
+.md-body img.md-img{
+  display:block;max-width:min(100%,30em);max-height:70vh;
+  width:auto;height:auto;border-radius:6px;margin:.6em auto;
+}
 .md-body mark{background:rgba(168,132,47,.28);color:inherit;padding:0 2px}
 .md-body del{opacity:.6}
 .md-body .md-zhu{color:var(--accent);font-size:.92em}
