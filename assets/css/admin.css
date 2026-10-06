@@ -73,6 +73,23 @@ textarea.md{min-height:420px;font-family:var(--mono);font-size:13px;line-height:
 }
 .list-item .mini{display:flex;gap:6px;flex:none}
 
+/* 故事全列表：来源小标签 + 来源分段筛选 */
+.src-tag{
+  display:inline-block;flex:none;align-self:flex-start;
+  font-family:var(--mono);font-size:10px;letter-spacing:.12em;
+  padding:2px 8px;border-radius:999px;border:1px solid var(--line-2);
+  color:var(--ink-3);background:transparent;margin-right:2px;
+}
+.seg{display:inline-flex;border:1px solid var(--line-2);border-radius:999px;overflow:hidden}
+.seg button{
+  border:0;background:transparent;color:var(--ink-2);cursor:pointer;
+  padding:5px 13px;font-size:12.5px;letter-spacing:.06em;transition:.16s;
+  border-right:1px solid var(--line-2);
+}
+.seg button:last-child{border-right:0}
+.seg button:hover{color:var(--a1)}
+.seg button.on{background:var(--a1);color:#0d0f12;border-color:var(--a1)}
+
 /* 图片选择 */
 .img-pick{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
 .img-pick .thumb{

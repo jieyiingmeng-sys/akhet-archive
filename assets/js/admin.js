@@ -133,7 +133,7 @@
         { k: 'title', t: '标题' }, { k: 'caption', t: '说明' },
         { k: 'imageId', t: '图', type: 'img' },
         { k: 'tags', t: '标签', type: 'tags' },
-        { k: 'cat', t: '分级', type: 'select', opts: [{ v: 'finished', t: '完成度高' }, { v: 'sketch', t: '摸鱼' }, { v: 'manga', t: '故事漫' }] },
+        { k: 'cat', t: '分级', type: 'select', opts: [{ v: 'finished', t: '插画' }, { v: 'sketch', t: '摸鱼' }, { v: 'manga', t: '故事漫' }] },
         { k: 'ratio', t: '比例', type: 'select', opts: [{ v: '3/4', t: '3/4 竖' }, { v: '1/1', t: '1/1 方' }, { v: '16/9', t: '16/9 横' }] }
       ]
     }
@@ -623,7 +623,8 @@
     });
   }
 
-  function editArticle(host, kind, idx) {
+  function editArticle(host, kind, idx, rerender) {
+    rerender = rerender || function () { renderArticles(host, kind); };
     var s = Store.load();
     var a = s.articles[idx];
     var box = $('#formBox', host);
@@ -702,7 +703,7 @@
       a.media = med;
       a.updatedAt = Date.now();
       Store.markDirty();
-      if (Store.save()) { toast('已保存'); renderArticles(host, kind); }
+      if (Store.save()) { toast('已保存'); rerender(); }
     };
   }
 
@@ -738,7 +739,98 @@
     });
   }
 
-  function editMisread(host, idx) {
+  /* ---------------- 故事全列表（合并故事 / 祂的视角 / 目击记录） ---------------- */
+  function renderAllReadables(host) {
+    var s = Store.load();
+    var arts = (s.articles || []).map(function (a, i) {
+      return { _src: (a.kind || 'story') === 'note' ? 'note' : 'story', _i: i, _o: a };
+    });
+    var mis = (s.misreads || []).map(function (m, i) {
+      return { _src: (m.kind || 'misread') === 'slander' ? 'slander' : 'misread', _i: i, _o: m };
+    });
+    var items = arts.concat(mis).sort(function (x, y) { return (y._o.updatedAt || 0) - (x._o.updatedAt || 0); });
+
+    var srcs = [['all', '全部'], ['story', '故事'], ['note', '祂的视角'], ['misread', '历史误读'], ['slander', '诋毁与冠名混乱']];
+    var cur = 'all';
+
+    function segHTML() {
+      return '<div class="seg">' + srcs.map(function (x) {
+        return '<button data-src="' + x[0] + '"' + (x[0] === cur ? ' class="on"' : '') + '>' + x[1] + '</button>';
+      }).join('') + '</div>';
+    }
+
+    function draw() {
+      var list = cur === 'all' ? items : items.filter(function (it) { return it._src === cur; });
+      host.innerHTML = '<div class="sec-head"><span class="sec-num">故事全列表</span><span class="sec-title">' + items.length + ' 条</span></div>' +
+        '<p class="hint">故事 · 祂的视角（笔记）· 目击记录（历史误读 / 诋毁与冠名混乱）统一在此管理。可下钻到「祂的踪迹」「祂的马甲」「关系网」交叉查看。</p>' +
+        '<div class="row">' + segHTML() + '<button class="btn primary" id="new">＋ 新建</button></div>' +
+        '<div class="list">' + list.map(function (it) {
+          var o = it._o;
+          var label = Store.SRC_LABEL[it._src] || it._src;
+          var meta;
+          if (it._src === 'misread' || it._src === 'slander') meta = [o.era, o.region, o.summary].filter(Boolean).join('　·　');
+          else meta = [o.era, o.region, Store.medium(o.medium).name].filter(Boolean).join('　·　');
+          return '<div class="list-item" data-src="' + it._src + '" data-i="' + it._i + '">' +
+            '<div class="li-main"><span class="src-tag">' + label + '</span>' + (o.pinned ? ' <strong>★ </strong>' : '') +
+            '<strong>' + esc(o.title) + '</strong><span>' + esc(meta) + '</span></div>' +
+            '<div class="mini"><button data-act="edit">编辑</button><button data-act="del">删除</button></div></div>';
+        }).join('') + '</div><div id="formBox"></div>';
+
+      $$('.seg button', host).forEach(function (b) {
+        b.onclick = function () { cur = b.getAttribute('data-src'); draw(); };
+      });
+      $('#new', host).onclick = newItem;
+      bindList();
+    }
+
+    function newItem() {
+      var types = [['story', '故事'], ['note', '祂的视角（笔记）'], ['misread', '历史误读'], ['slander', '诋毁与冠名混乱']];
+      var pick = prompt('新建哪种？\n' + types.map(function (x, i) { return (i + 1) + '. ' + x[1]; }).join('\n'), '1');
+      if (pick == null) return;
+      var idx = parseInt(pick, 10) - 1;
+      if (isNaN(idx) || idx < 0 || idx >= types.length) return;
+      var kind = types[idx][0];
+      var d = Store.load();
+      if (kind === 'story' || kind === 'note') {
+        var a = {
+          id: Store.uid('a'), kind: kind, title: '新' + (kind === 'note' ? '笔记' : '故事'), subtitle: '',
+          coverType: 'title', coverQuote: '', coverImage: '',
+          medium: 'thread', era: '', region: '', year: '', tags: [], avatarIds: [], body: '', media: [],
+          pinned: false, createdAt: Date.now(), updatedAt: Date.now()
+        };
+        d.articles.unshift(a); Store.markDirty(); Store.save();
+        editArticle(host, kind, d.articles.indexOf(a), function () { renderAllReadables(host); });
+      } else {
+        var m = { id: Store.uid('m'), kind: kind, title: '新条目', era: '', region: '', summary: '', tags: [], versions: [], refs: [], media: [], noteId: '', storyIds: [] };
+        d.misreads.unshift(m); Store.markDirty(); Store.save();
+        editMisread(host, d.misreads.indexOf(m), function () { renderAllReadables(host); });
+      }
+    }
+
+    function bindList() {
+      $$('.list-item', host).forEach(function (it) {
+        var src = it.getAttribute('data-src'), i = Number(it.getAttribute('data-i'));
+        $$('button', it).forEach(function (b) {
+          b.onclick = function () {
+            if (b.getAttribute('data-act') === 'edit') {
+              if (src === 'misread' || src === 'slander') editMisread(host, i, function () { renderAllReadables(host); });
+              else editArticle(host, src, i, function () { renderAllReadables(host); });
+            } else {
+              if (!confirm('删除这条？')) return;
+              if (src === 'misread' || src === 'slander') Store.load().misreads.splice(i, 1);
+              else Store.load().articles.splice(i, 1);
+              Store.markDirty(); Store.save(); draw();
+            }
+          };
+        });
+      });
+    }
+
+    draw();
+  }
+
+  function editMisread(host, idx, rerender) {
+    rerender = rerender || function () { renderMisreads(host); };
     var s = Store.load();
     var m = s.misreads[idx];
     var box = $('#formBox', host);
@@ -818,7 +910,7 @@
       m.storyIds = $$('.m_st:checked', box).map(function (x) { return x.value; });
       m.media = med;
       Store.markDirty();
-      if (Store.save()) { toast('已保存'); renderMisreads(host); }
+      if (Store.save()) { toast('已保存'); rerender(); }
     };
   }
 
@@ -1019,12 +1111,10 @@
         { k: 'timeline', t: '时间轴', fn: function (h) { renderList('timeline', h); } },
         { k: 'concepts', t: '概念分节点', fn: function (h) { renderList('concepts', h); } },
         { k: 'relations', t: '马甲与关系', fn: function (h) { renderList('relations', h); } },
-        { k: 'stories', t: '故事', fn: function (h) { renderArticles(h, 'story'); } },
-        { k: 'notes', t: '祂的笔记', fn: function (h) { renderArticles(h, 'note'); } },
-        { k: 'misreads', t: '目击记录', fn: renderMisreads },
+        { k: 'stories', t: '故事全列表', fn: renderAllReadables },
         { k: 'things', t: '祂的东西', fn: function (h) { renderList('things', h); } },
         { k: 'fans', t: '网友作品', fn: function (h) { renderList('fans', h); } },
-        { k: 'gallery', t: '插画', fn: function (h) { renderList('gallery', h); } },
+        { k: 'gallery', t: '祂的影像', fn: function (h) { renderList('gallery', h); } },
         { k: 'images', t: '图片库', fn: renderImages },
         { k: 'backup', t: '备份', fn: renderBackup }
       ];

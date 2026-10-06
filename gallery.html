@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>插画 · AKHET</title>
+<title>祂的影像 · AKHET</title>
 <link rel="stylesheet" href="assets/css/base.css">
 <link rel="stylesheet" href="assets/css/front.css">
 <link rel="stylesheet" href="assets/css/atlas.css">
@@ -24,11 +24,14 @@
 <main class="wrap">
   <section class="section-sm">
     <div class="sec-head"><span class="sec-num">09 · GALLERY</span><span class="sec-title">插画</span><span class="sec-en">Illustrations</span></div>
-    <p class="lede">立绘、场景与设定图。瀑布流按原始比例排布，点图放大。可用下方分级挑着看——<strong>完成度高</strong>的精草、随手<strong>摸鱼</strong>、以及推进剧情的<strong>故事漫</strong>。</p>
+    <p class="lede">立绘、场景与设定图。瀑布流按原始比例排布，点图放大。可用下方分级挑着看——<strong>插画</strong>级的精草、随手<strong>摸鱼</strong>、以及推进剧情的<strong>故事漫</strong>。</p>
   </section>
   <section class="section-sm">
-    <div class="filter-bar" id="tagWrap"></div>
-    <div class="gal-cats" id="catWrap"></div>
+    <div class="gal-filter">
+      <div class="filter-bar" id="tagWrap"></div>
+      <span class="gal-div"></span>
+      <div class="gal-cats" id="catWrap"></div>
+    </div>
     <div class="gal-wall" id="wall"></div>
   </section>
 </main>
@@ -56,7 +59,7 @@
   /* 分级次级导航 */
   var CATS = [
     { v: 'all',     t: '全部' },
-    { v: 'finished', t: '完成度高' },
+    { v: 'finished', t: '插画' },
     { v: 'sketch',  t: '摸鱼' },
     { v: 'manga',   t: '故事漫' }
   ];
@@ -74,7 +77,7 @@
         '<figcaption class="gi-cap"><strong>' + esc(g.title) + '</strong><span>' + esc(g.caption || '') + '</span>' +
         ((g.tags || []).length ? '<div class="chips">' + g.tags.map(function (t) { return '<span class="tag tag-gold">' + esc(t) + '</span>'; }).join('') + '</div>' : '') +
         '</figcaption></figure>';
-    }).join('') : Common.empty('这一分级下还没有插画。到后台「插画」里添加，并选好分级。');
+    }).join('') : Common.empty('这一分级下还没有插画。到后台「祂的影像」里添加，并选好分级。');
     Common.fillImages(host); Common.reveal(host);
   }
 

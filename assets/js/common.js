@@ -10,7 +10,7 @@
     { key: 'relations', href: 'relations.html',text: '关系网' },
     { key: 'things',    href: 'things.html',   text: '祂的东西' },
     { key: 'stories',   href: 'stories.html',  text: '故事全列表' },
-    { key: 'gallery',   href: 'gallery.html',  text: '插画' },
+    { key: 'gallery',   href: 'gallery.html',  text: '祂的影像' },
     { key: 'fanworks',  href: 'fanworks.html', text: '网友作品' }
   ];
 

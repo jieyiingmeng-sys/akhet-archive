@@ -185,15 +185,20 @@
 .gal-item .gi-cap span{font-size:12.5px;color:var(--ink-2)}
 .gal-item .gi-cap .chips{margin-top:9px}
 
+/* 插画筛选条：标签 + 分级 同一行，视觉分组又相隔开 */
+.gal-filter{display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:26px}
+.gal-filter .filter-bar{margin-bottom:0}
+.gal-div{flex:none;width:1px;align-self:stretch;min-height:30px;background:var(--line-2)}
+
 /* 插画分级次级导航 */
-.gal-cats{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
+.gal-cats{display:flex;gap:8px;flex-wrap:wrap}
 .gal-cats button{
   padding:5px 14px;border:1px solid var(--line-2);border-radius:999px;
-  background:rgba(255,255,255,.04);color:var(--ink-2);cursor:pointer;
+  background:transparent;color:var(--ink-2);cursor:pointer;
   font-size:12.5px;letter-spacing:.08em;transition:.18s;
 }
 .gal-cats button:hover{border-color:var(--a1);color:var(--a1)}
-.gal-cats button.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+.gal-cats button.on{background:var(--a1);color:#0d0f12;border-color:var(--a1)}
 
 .lightbox{
   position:fixed;inset:0;background:rgba(6,7,9,.96);z-index:200;
