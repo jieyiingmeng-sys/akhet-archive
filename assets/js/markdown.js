@@ -16,8 +16,10 @@
     // 图片 ![alt](src)：本地图（img:ID 或 img_/med_ 形式）用 data-img 交给 fillImages 异步解析；
     // 外链（http/https/相对路径）直接保留 src。
     t = t.replace(/!\[([^\]]*)\]\(([^)\s]+)\)/g, function (m, alt, src) {
-      if (/^img:/i.test(src) || /^(img|med)_[A-Za-z0-9]+$/i.test(src)) {
-        var id = src.replace(/^img:/i, '');
+      // 本地图：img:ID / img_ID / med:ID / med_ID 都归一为 img_xxx / med_xxx（与 Store.uid 生成的 id 一致）
+      var m2 = src.match(/^(img|med)[:_]([A-Za-z0-9]+)$/i);
+      if (m2) {
+        var id = m2[1].toLowerCase() + '_' + m2[2];
         return '<img alt="' + alt + '" class="md-img" data-img="' + id + '">';
       }
       return '<img alt="' + alt + '" src="' + src + '" class="md-img">';

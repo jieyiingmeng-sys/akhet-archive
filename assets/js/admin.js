@@ -460,6 +460,37 @@
     });
   }
 
+  /* 在 Markdown 正文光标处插入本地图片（语法 ![](img:ID)，发布后云端也能解析） */
+  function bindImageInserter(box, upd) {
+    var btn = $('#f_insimg', box), pop = $('#f_imgpop', box), ta = $('#f_body', box);
+    if (!btn) return;
+    btn.onclick = function () {
+      var imgs = (Store.load().images || []).slice().reverse();
+      if (!imgs.length) { toast('图片库还没有图，先到「图片库」标签上传'); return; }
+      pop.innerHTML = '<div class="img-pop-h">点击插入到正文光标处</div>' +
+        imgs.map(function (o) {
+          return '<span class="img-cell" data-ins="' + esc(o.id) + '"><i class="thumb" data-img="' + esc(o.id) + '"></i></span>';
+        }).join('');
+      Common.fillImages(pop);
+      pop.style.display = pop.style.display === 'none' ? '' : 'none';
+      pop.querySelectorAll('[data-ins]').forEach(function (c) {
+        c.onclick = function () {
+          var id = c.getAttribute('data-ins');
+          var token = '![](' + (id.indexOf('img_') === 0 ? 'img:' + id.slice(4) : id) + ')';
+          insertAtCursor(ta, token);
+          if (upd) upd();
+          pop.style.display = 'none';
+        };
+      });
+    };
+  }
+  function insertAtCursor(ta, text) {
+    var s = ta.selectionStart || 0, e = ta.selectionEnd || 0;
+    ta.value = ta.value.slice(0, s) + text + ta.value.slice(e);
+    var p = s + text.length;
+    ta.setSelectionRange(p, p); ta.focus();
+  }
+
   /* ---------------- 影音附件编辑器（故事 / 祂的视角 / 目击记录共用） ----------
    * list 为条目上的 media 数组引用，编辑期间直接改写它，由调用方在保存时写回。 */
   function mediaListHTML(list) {
@@ -631,7 +662,10 @@
       '</div>' +
       '<label class="f-bool"><span>置顶</span><input type="checkbox" id="f_pin"' + (a.pinned ? ' checked' : '') + '></label>' +
       '<div class="editor"><div class="ed-col"><span class="lbl">Markdown 正文</span>' +
-      '<textarea id="f_body" class="md">' + esc(a.body || '') + '</textarea></div>' +
+      '<div class="md-bar"><button class="btn mini" id="f_insimg" type="button">🖼 插入图片</button>' +
+      '<span class="dim">（从图片库选一张，插入到光标处）</span></div>' +
+      '<textarea id="f_body" class="md">' + esc(a.body || '') + '</textarea>' +
+      '<div class="img-pop" id="f_imgpop" style="display:none"></div></div>' +
       '<div class="ed-col"><span class="lbl">预览</span><div class="preview md-body" id="pv"></div></div></div>' +
       '<p class="hint">语法：# 标题、**粗**、*斜*、&gt; 引用、- 列表、--- 分割线、::题记::、{{夹注}}、%%朱批%%</p>' +
       medHTML +
@@ -647,6 +681,7 @@
     var pv = $('#pv', box), ta = $('#f_body', box);
     var upd = function () { pv.innerHTML = MD.parse(ta.value); Common.fillImages(pv); };
     ta.oninput = upd; upd();
+    bindImageInserter(box, upd);
 
     $('#cc', box).onclick = function () { box.innerHTML = ''; };
     $('#sv', box).onclick = function () {

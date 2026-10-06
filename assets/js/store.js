@@ -278,7 +278,11 @@
   function buildSnapshot() {
     var d = load();
     var ids = {};
-    JSON.stringify(d).replace(/"((?:img|med)_[A-Za-z0-9]+)"/g, function (m, id) { ids[id] = 1; return m; });
+    // 收集全部图片引用：封面 / 媒体 / 图片库里的独立 JSON 值（img_xxx / med_xxx），
+    // 以及 markdown 正文里嵌的写法（img:xxx / img_xxx / med:xxx / med_xxx 皆可），统一归一为 img_xxx / med_xxx。
+    JSON.stringify(d).replace(/(img|med)[:_]([A-Za-z0-9]+)/g, function (m, p, suf) {
+      ids[p.toLowerCase() + '_' + suf] = 1; return m;
+    });
     var jobs = Object.keys(ids).map(function (id) {
       return idbGet(id).then(function (blob) {
         if (!blob) { var b = lsGet(id); return b ? [id, b] : null; }
