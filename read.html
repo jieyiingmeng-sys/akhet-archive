@@ -98,7 +98,8 @@
   if (idx > 0) { var p = document.getElementById('prev'); p.href = 'read.html?id=' + encodeURIComponent(list[idx - 1].id); p.style.display = ''; }
   if (idx >= 0 && idx < list.length - 1) { var n = document.getElementById('next'); n.href = 'read.html?id=' + encodeURIComponent(list[idx + 1].id); n.style.display = ''; }
 
-  var VERT = { bamboo: 1, silk: 1, thread: 1, washi: 1 };
+  /* 帛书卷轴固定横排（横展卷轴，竖排下插图会放大到不可读）；竖排仅保留竹简/线装/和纸 */
+  var VERT = { bamboo: 1, thread: 1, washi: 1 };
   var vertical = !!VERT[a.medium];
   var reader = document.getElementById('reader');
   reader.classList.add('medium-' + a.medium);

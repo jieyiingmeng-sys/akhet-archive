@@ -85,6 +85,8 @@
   height:72vh;max-height:720px;overflow-x:auto;overflow-y:hidden;
 }
 .reader.horizontal .book{writing-mode:horizontal-tb}
+/* 竖排模式下的插图：限制高度，避免撑爆整列 */
+.reader.vertical .md-body img.md-img{max-height:40vh;max-width:min(100%,22em)}
 
 /* ================= 1. 泥板 · clay ================= */
 .medium-clay .book{
