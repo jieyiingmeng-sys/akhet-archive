@@ -36,7 +36,6 @@
         <a class="btn" href="avatars.html">祂的马甲</a>
         <a class="btn" href="stories.html">故事全列表</a>
       </div>
-      <div class="stat-row" id="stats"></div>
     </div>
     <div class="portrait-frame">
       <div class="portrait" id="portrait" data-img=""><span class="ph" id="portraitPh">主视觉<br>待上传</span></div>
@@ -77,16 +76,6 @@
     var ph = document.getElementById('portraitPh'); if (ph) ph.remove();
   }
   Common.fillImages(document);
-
-  var stats = [
-    ['故事', Store.stories().length], ['笔记', Store.notes().length],
-    ['马甲', (s.relations || []).filter(Common.isAvatar).length],
-    ['时代', (s.eras || []).length],
-    ['目击记录', (s.misreads || []).length]
-  ];
-  document.getElementById('stats').innerHTML = stats.map(function (x) {
-    return '<div class="stat"><b>' + x[1] + '</b><span>' + x[0] + '</span></div>';
-  }).join('');
 })();
 </script>
 </body>
