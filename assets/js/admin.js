@@ -417,6 +417,36 @@
     };
   }
 
+  /* ---------------- 祂的踪迹（合并 时代 / 地图标记 / 时间轴 / 概念分节点） ----------------
+   * 这四类在前端共同组成「祂的踪迹」。后台用一个 tab 管理，内部用分段切换，
+   * 每段仍是通用 renderList 编辑器，所有字段（含地图取点、地名定位、关联故事等）原样保留。
+   */
+  function renderTrace(host) {
+    var SUBS = [
+      { k: 'eras',     t: '时代' },
+      { k: 'places',   t: '地图标记' },
+      { k: 'timeline', t: '时间轴' },
+      { k: 'concepts', t: '概念分节点' }
+    ];
+    var cur = 'eras';
+    host.innerHTML = '<div class="sec-head"><span class="sec-num">祂的踪迹</span><span class="sec-title">时代 · 地图 · 时间轴 · 概念</span></div>' +
+      '<p class="hint">这四类在前端共同组成「祂的踪迹」，可在此统一维护。马甲与关系在「马甲与关系」单独管理。</p>' +
+      '<div class="seg">' + SUBS.map(function (x) {
+        return '<button data-sub="' + x.k + '"' + (x.k === cur ? ' class="on"' : '') + '>' + x.t + '</button>';
+      }).join('') + '</div><div class="sub-pane" id="subPane"></div>';
+    var pane = $('#subPane', host);
+    function open(k) {
+      cur = k;
+      $$('.seg button', host).forEach(function (b) { b.classList.toggle('on', b.getAttribute('data-sub') === k); });
+      pane.innerHTML = '';
+      renderList(k, pane);
+    }
+    $$('.seg button', host).forEach(function (b) {
+      b.onclick = function () { open(b.getAttribute('data-sub')); };
+    });
+    open(cur);
+  }
+
   /* 上传：写入 IndexedDB 并回填字段 */
   function bindUploads(scope) {
     $$('input[type=file]', scope).forEach(function (fi) {
@@ -914,8 +944,8 @@
     };
   }
 
-  /* ---------------- 站点 / 档案 ---------------- */
-  function renderSite(host) {
+  /* ---------------- 站点 / 档案 / 主视觉（合并原「站点 / 档案」与「主视觉」） ---------------- */
+  function renderSitePortrait(host) {
     var s = Store.load();
     host.innerHTML = '<div class="sec-head"><span class="sec-num">站点</span><span class="sec-title">标题与说明</span></div>' +
       '<div class="grid2">' +
@@ -941,6 +971,10 @@
           '<textarea class="f_v" placeholder="内容">' + esc(f.v) + '</textarea>' +
           '<button class="btn mini" data-act="rmf">移除</button></div>';
       }).join('') + '</div></div>' +
+      '<div class="sec-head"><span class="sec-num">主视觉</span><span class="sec-title">首页人物插图</span></div>' +
+      '<div class="f-img" id="pf_w"><span>首页主视觉图</span><div class="img-pick">' +
+      '<span class="thumb big" data-img="' + esc(s.profile.portrait || '') + '"></span>' +
+      '<input type="file" accept="image/*"><button class="btn mini" data-act="clear">清除</button></div></div>' +
       '<div class="row"><button class="btn primary" id="sv">保存</button></div>';
 
     $('#addF', host).onclick = function () {
@@ -951,6 +985,8 @@
       var b = e.target.closest('[data-act=rmf]');
       if (b) b.parentNode.remove();
     });
+    var w = $('#pf_w', host); w._v = s.profile.portrait || '';
+    Common.fillImages(host); bindUploads(host);
     $('#sv', host).onclick = function () {
       var d = Store.load();
       $$('[data-s]', host).forEach(function (n) { d.site[n.getAttribute('data-s')] = n.value; });
@@ -958,24 +994,9 @@
       d.profile.fields = $$('#fList .sub-item', host).map(function (el) {
         return { k: $('.f_k', el).value, v: $('.f_v', el).value };
       }).filter(function (f) { return f.k || f.v; });
+      d.profile.portrait = w._v || '';
       Store.markDirty();
       if (Store.save()) toast('已保存');
-    };
-  }
-
-  function renderPortrait(host) {
-    var s = Store.load();
-    var pf = s.profile;
-    host.innerHTML = '<div class="sec-head"><span class="sec-num">主视觉</span><span class="sec-title">首页人物插图</span></div>' +
-      '<div class="f-img" id="pf_w"><span>首页主视觉图</span><div class="img-pick">' +
-      '<span class="thumb big" data-img="' + esc(pf.portrait || '') + '"></span>' +
-      '<input type="file" accept="image/*"><button class="btn mini" data-act="clear">清除</button></div></div>' +
-      '<div class="row"><button class="btn primary" id="sv">保存</button></div>';
-    var w = $('#pf_w', host); w._v = pf.portrait || '';
-    Common.fillImages(host); bindUploads(host);
-    $('#sv', host).onclick = function () {
-      Store.load().profile.portrait = w._v || '';
-      Store.markDirty(); if (Store.save()) toast('已保存');
     };
   }
 
@@ -1104,17 +1125,13 @@
     var appEl = $('#app');
     gate(appEl, function () {
       var TABS = [
-        { k: 'site', t: '站点 / 档案', fn: renderSite },
-        { k: 'portrait', t: '主视觉', fn: renderPortrait },
-        { k: 'eras', t: '时代', fn: function (h) { renderList('eras', h); } },
-        { k: 'places', t: '地图标记', fn: function (h) { renderList('places', h); } },
-        { k: 'timeline', t: '时间轴', fn: function (h) { renderList('timeline', h); } },
-        { k: 'concepts', t: '概念分节点', fn: function (h) { renderList('concepts', h); } },
+        { k: 'trace', t: '祂的踪迹', fn: renderTrace },
         { k: 'relations', t: '马甲与关系', fn: function (h) { renderList('relations', h); } },
         { k: 'stories', t: '故事全列表', fn: renderAllReadables },
         { k: 'things', t: '祂的东西', fn: function (h) { renderList('things', h); } },
         { k: 'fans', t: '网友作品', fn: function (h) { renderList('fans', h); } },
         { k: 'gallery', t: '祂的影像', fn: function (h) { renderList('gallery', h); } },
+        { k: 'site', t: '站点 / 档案', fn: renderSitePortrait },
         { k: 'images', t: '图片库', fn: renderImages },
         { k: 'backup', t: '备份', fn: renderBackup }
       ];

@@ -89,6 +89,7 @@ textarea.md{min-height:420px;font-family:var(--mono);font-size:13px;line-height:
 .seg button:last-child{border-right:0}
 .seg button:hover{color:var(--a1)}
 .seg button.on{background:var(--a1);color:#0d0f12;border-color:var(--a1)}
+.sub-pane{margin-top:16px}
 
 /* 图片选择 */
 .img-pick{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
