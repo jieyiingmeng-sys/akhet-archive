@@ -7,11 +7,10 @@
     { key: 'home',      href: 'index.html',    text: '首页' },
     { key: 'story',     href: 'story.html',    text: '祂的踪迹' },
     { key: 'avatars',   href: 'avatars.html',  text: '祂的马甲' },
-    { key: 'view',      href: 'view.html',     text: '祂的视角' },
-    { key: 'record',    href: 'record.html',   text: '目击记录' },
     { key: 'relations', href: 'relations.html',text: '关系网' },
     { key: 'things',    href: 'things.html',   text: '祂的东西' },
     { key: 'stories',   href: 'stories.html',  text: '故事全列表' },
+    { key: 'gallery',   href: 'gallery.html',  text: '插画' },
     { key: 'fanworks',  href: 'fanworks.html', text: '网友作品' }
   ];
 

@@ -20,7 +20,8 @@
     { id: 'palm',       name: '贝叶经',     era: '古代—中古',  region: '南亚 · 东南亚',     hint: '贝叶刻写，穿孔穿绳' },
     { id: 'quipu',      name: '结绳记事',   era: '印加',       region: '安第斯',            hint: '无文字，以绳结记数记事' },
     { id: 'letterpress',name: '铅印平装',   era: '近代',       region: '全球',              hint: '活字排版，机制纸平装' },
-    { id: 'modern',     name: '现代电子文本',era: '当代',       region: '全球',              hint: '屏幕阅读，等宽与超链接' }
+    { id: 'modern',     name: '现代电子文本',era: '当代',       region: '全球',              hint: '屏幕阅读，等宽与超链接' },
+    { id: 'none',       name: '无载体',       era: '',            region: '',                hint: '纯展示，无书籍形态' }
   ];
 
   function uid(p) { return (p || 'id') + '_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7); }

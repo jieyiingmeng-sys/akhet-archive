@@ -24,10 +24,11 @@
 <main class="wrap">
   <section class="section-sm">
     <div class="sec-head"><span class="sec-num">09 · GALLERY</span><span class="sec-title">插画</span><span class="sec-en">Illustrations</span></div>
-    <p class="lede">立绘、场景与设定图。点图放大。</p>
+    <p class="lede">立绘、场景与设定图。瀑布流按原始比例排布，点图放大。可用下方分级挑着看——<strong>完成度高</strong>的精草、随手<strong>摸鱼</strong>、以及推进剧情的<strong>故事漫</strong>。</p>
   </section>
   <section class="section-sm">
     <div class="filter-bar" id="tagWrap"></div>
+    <div class="gal-cats" id="catWrap"></div>
     <div class="gal-wall" id="wall"></div>
   </section>
 </main>
@@ -52,32 +53,54 @@
   var tags = [];
   all.forEach(function (g) { (g.tags || []).forEach(function (t) { if (tags.indexOf(t) < 0) tags.push(t); }); });
 
+  /* 分级次级导航 */
+  var CATS = [
+    { v: 'all',     t: '全部' },
+    { v: 'finished', t: '完成度高' },
+    { v: 'sketch',  t: '摸鱼' },
+    { v: 'manga',   t: '故事漫' }
+  ];
+  var cat = 'all', picked = [];
+
   var host = document.getElementById('wall');
-  function paint(cur) {
-    var list = all.filter(function (g) { return Common.matchTags(g, cur || []); });
+  function paint() {
+    var list = all.filter(function (g) {
+      if (cat !== 'all' && g.cat !== cat) return false;
+      return Common.matchTags(g, picked);
+    });
     host.innerHTML = list.length ? list.map(function (g) {
-      return '<div class="gal-item reveal" data-i="' + esc(g.id) + '">' +
-        '<div class="gi-img" data-img="' + esc(g.imageId || '') + '" style="aspect-ratio:' + esc(g.ratio || '3/4') + '"></div>' +
-        '<div class="gi-cap"><strong>' + esc(g.title) + '</strong><span>' + esc(g.caption || '') + '</span>' +
+      return '<figure class="gal-item reveal" data-i="' + esc(g.id) + '">' +
+        '<img class="gi-img md-img" data-img="' + esc(g.imageId || '') + '" alt="' + esc(g.title) + '">' +
+        '<figcaption class="gi-cap"><strong>' + esc(g.title) + '</strong><span>' + esc(g.caption || '') + '</span>' +
         ((g.tags || []).length ? '<div class="chips">' + g.tags.map(function (t) { return '<span class="tag tag-gold">' + esc(t) + '</span>'; }).join('') + '</div>' : '') +
-        '</div></div>';
-    }).join('') : Common.empty('还没有插画。到后台「插画」里添加。');
+        '</figcaption></figure>';
+    }).join('') : Common.empty('这一分级下还没有插画。到后台「插画」里添加，并选好分级。');
     Common.fillImages(host); Common.reveal(host);
   }
 
-  document.getElementById('tagWrap').appendChild(Common.tagBar(tags, paint));
-  paint([]);
+  /* 分级按钮 */
+  var catWrap = document.getElementById('catWrap');
+  catWrap.innerHTML = CATS.map(function (c) {
+    return '<button data-cat="' + c.v + '"' + (c.v === cat ? ' class="on"' : '') + '>' + c.t + '</button>';
+  }).join('');
+  catWrap.addEventListener('click', function (e) {
+    var b = e.target.closest('[data-cat]'); if (!b) return;
+    cat = b.getAttribute('data-cat');
+    catWrap.querySelectorAll('button').forEach(function (x) { x.classList.toggle('on', x.getAttribute('data-cat') === cat); });
+    paint();
+  });
 
+  document.getElementById('tagWrap').appendChild(Common.tagBar(tags, function (cur) { picked = cur; paint(); }));
+  paint();
+
+  /* 灯箱：点图放大 */
   var lb = document.getElementById('lb');
   host.addEventListener('click', function (e) {
-    var it = e.target.closest('.gal-item'); if (!it) return;
-    var img = it.querySelector('.gi-img');
-    var u = img && img.style.backgroundImage.slice(5, -2);
-    if (u) {
-      document.getElementById('lbImg').src = u;
-      document.getElementById('lbCap').textContent = it.querySelector('strong').textContent;
-      lb.classList.add('open');
-    }
+    var img = e.target.closest('.gi-img'); if (!img || !img.src) return;
+    document.getElementById('lbImg').src = img.src;
+    var cap = img.parentNode.querySelector('strong');
+    document.getElementById('lbCap').textContent = cap ? cap.textContent : '';
+    lb.classList.add('open');
   });
   lb.addEventListener('click', function (e) {
     if (e.target.closest('.lb-close') || e.target.id === 'lb') lb.classList.remove('open');

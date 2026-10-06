@@ -133,6 +133,7 @@
         { k: 'title', t: '标题' }, { k: 'caption', t: '说明' },
         { k: 'imageId', t: '图', type: 'img' },
         { k: 'tags', t: '标签', type: 'tags' },
+        { k: 'cat', t: '分级', type: 'select', opts: [{ v: 'finished', t: '完成度高' }, { v: 'sketch', t: '摸鱼' }, { v: 'manga', t: '故事漫' }] },
         { k: 'ratio', t: '比例', type: 'select', opts: [{ v: '3/4', t: '3/4 竖' }, { v: '1/1', t: '1/1 方' }, { v: '16/9', t: '16/9 横' }] }
       ]
     }

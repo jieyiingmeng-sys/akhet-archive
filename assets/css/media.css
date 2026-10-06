@@ -88,6 +88,9 @@
 /* 竖排模式下的插图：限制高度，避免撑爆整列 */
 .reader.vertical .md-body img.md-img{max-height:40vh;max-width:min(100%,22em)}
 
+/* 无载体：纯展示卡片（发图专用） */
+.medium-none .book{max-width:840px;margin:0 auto;padding:34px 38px;background:var(--surface);border:1px solid var(--line);border-radius:4px}
+
 /* ================= 1. 泥板 · clay ================= */
 .medium-clay .book{
   max-width:760px;margin:0 auto;padding:52px 54px 66px;

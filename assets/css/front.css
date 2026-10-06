@@ -174,15 +174,26 @@
   cursor:zoom-in;transition:.2s;
 }
 .gal-item:hover{border-color:var(--line-2);box-shadow:var(--shadow)}
-.gal-item .gi-img{width:100%;background:var(--sunk) center/cover no-repeat}
+/* 瀑布流：图按原始比例自然排布（不锁死长宽比，才有 Pinterest 高低错落感） */
+.gal-item .gi-img{display:block;width:100%;height:auto}
 .gal-item .gi-img.no-img{
-  background:repeating-linear-gradient(45deg,#15191e 0 11px,#10141a 11px 22px);
+  aspect-ratio:3/4;background:repeating-linear-gradient(45deg,#15191e 0 11px,#10141a 11px 22px);
   display:grid;place-items:center;color:var(--ink-3);font-size:11px;letter-spacing:.2em;
 }
 .gal-item .gi-cap{padding:12px 15px 14px;border-top:1px solid var(--line)}
 .gal-item .gi-cap strong{display:block;font-size:14.5px;font-weight:500;letter-spacing:.06em}
 .gal-item .gi-cap span{font-size:12.5px;color:var(--ink-2)}
 .gal-item .gi-cap .chips{margin-top:9px}
+
+/* 插画分级次级导航 */
+.gal-cats{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
+.gal-cats button{
+  padding:5px 14px;border:1px solid var(--line-2);border-radius:999px;
+  background:rgba(255,255,255,.04);color:var(--ink-2);cursor:pointer;
+  font-size:12.5px;letter-spacing:.08em;transition:.18s;
+}
+.gal-cats button:hover{border-color:var(--a1);color:var(--a1)}
+.gal-cats button.on{background:var(--ink);color:#fff;border-color:var(--ink)}
 
 .lightbox{
   position:fixed;inset:0;background:rgba(6,7,9,.96);z-index:200;

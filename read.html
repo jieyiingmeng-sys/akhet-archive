@@ -45,7 +45,7 @@
 </div>
 
 <footer class="site-foot">
-  <div><a href="stories.html">故事全列表</a>　·　<a href="view.html">祂的视角</a></div>
+  <div><a href="stories.html">故事全列表</a></div>
 </footer>
 
 <script src="assets/js/cloud.js"></script>
@@ -63,9 +63,9 @@
   var a = Store.byId('articles', id);
   var isNote = a && a.kind === 'note';
 
-  Common.initNav(isNote ? 'view' : 'stories', '', true);
-  document.getElementById('back').href = isNote ? 'view.html' : 'stories.html';
-  document.getElementById('back').textContent = isNote ? '← 祂的视角' : '← 故事全列表';
+  Common.initNav('stories', '', true);
+  document.getElementById('back').href = 'stories.html';
+  document.getElementById('back').textContent = '← 故事全列表';
 
   var list = Common.sortArticles(all.filter(function (x) { return (x.kind || 'story') === (isNote ? 'note' : 'story'); }));
   var idx = list.map(function (x) { return x.id; }).indexOf(id);
