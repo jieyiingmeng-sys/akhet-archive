@@ -29,7 +29,7 @@ python -m http.server 8080
 | 08 | `fanworks.html` | 网友作品：主创精选 + tag 筛选 |
 | 09 | `gallery.html` | 插画：瀑布流 + 灯箱 |
 | — | `read.html?id=s1` | 阅读器：文章/笔记以所属时代与国家的书籍形态呈现（11 套载体） |
-| — | `about.html` | 关于：站点说明、栏目表、载体清单、Markdown 语法、存储说明 |
+| — | `about.html` | 关于：本站说明、书籍载体清单（11 套时代×地区载体） |
 | — | `admin.html` | 后台（备用）：全部内容自助增删改，图片上传，导入导出 |
 | — | `poor-dot-created.html` | 隐藏管理页：内容与后台一致、不在导航里、无口令，靠隐藏网址直接打开 |
 
