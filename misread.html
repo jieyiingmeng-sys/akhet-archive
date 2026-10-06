@@ -91,11 +91,13 @@
     ? vers.map(function (v, i) { return '<button class="chip' + (i === 0 ? ' on' : '') + '" data-i="' + i + '">' + esc(v.label || '版本 ' + (i + 1)) + '</button>'; }).join('')
     : '<span class="dim">（未分版本）</span>';
   document.getElementById('verBody').innerHTML = vers.length ? MD.parse(vers[0].body || '') : '<p class="dim">还没有填写记载内容。</p>';
+  Common.fillImages(document.getElementById('verBody'));
   tabs.addEventListener('click', function (e) {
     var b = e.target.closest('.chip'); if (!b) return;
     var i = Number(b.getAttribute('data-i'));
     tabs.querySelectorAll('.chip').forEach(function (x) { x.classList.toggle('on', x === b); });
     document.getElementById('verBody').innerHTML = MD.parse(vers[i].body || '');
+    Common.fillImages(document.getElementById('verBody'));
   });
 
   var refs = m.refs || [];

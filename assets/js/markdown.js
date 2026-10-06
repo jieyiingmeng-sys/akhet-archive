@@ -13,8 +13,13 @@
     t = esc(t);
     // 行内代码
     t = t.replace(/`([^`]+)`/g, '<code>$1</code>');
-    // 图片 ![alt](src)
+    // 图片 ![alt](src)：本地图（img:ID 或 img_/med_ 形式）用 data-img 交给 fillImages 异步解析；
+    // 外链（http/https/相对路径）直接保留 src。
     t = t.replace(/!\[([^\]]*)\]\(([^)\s]+)\)/g, function (m, alt, src) {
+      if (/^img:/i.test(src) || /^(img|med)_[A-Za-z0-9]+$/i.test(src)) {
+        var id = src.replace(/^img:/i, '');
+        return '<img alt="' + alt + '" class="md-img" data-img="' + id + '">';
+      }
       return '<img alt="' + alt + '" src="' + src + '" class="md-img">';
     });
     // 链接

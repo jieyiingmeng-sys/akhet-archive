@@ -49,6 +49,7 @@
   Common.initNav('about');
 
   document.getElementById('about').innerHTML = MD.parse(s.site.about || '');
+  Common.fillImages(document.getElementById('about'));
   document.title = '关于本站 · ' + s.site.title;
 
   document.getElementById('mediaTable').innerHTML =

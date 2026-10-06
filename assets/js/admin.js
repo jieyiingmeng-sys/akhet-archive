@@ -645,7 +645,7 @@
     bindMediaEditor(box, med);
 
     var pv = $('#pv', box), ta = $('#f_body', box);
-    var upd = function () { pv.innerHTML = MD.parse(ta.value); };
+    var upd = function () { pv.innerHTML = MD.parse(ta.value); Common.fillImages(pv); };
     ta.oninput = upd; upd();
 
     $('#cc', box).onclick = function () { box.innerHTML = ''; };
