@@ -69,17 +69,6 @@
         { k: 'desc', t: '说明', type: 'textarea' }
       ]
     },
-    concepts: {
-      label: '概念分节点', hint: '「祂的踪迹」页的另一条浏览轴：按主题而非年代。与历史时间轴可互相切换。',
-      mk: function () { return { id: Store.uid('c'), order: 99, title: '新节点', desc: '', link: '' }; },
-      title: function (o) { return o.order + '. ' + o.title; },
-      sub: function (o) { return o.desc || ''; },
-      fields: [
-        { k: 'order', t: '排序', type: 'num' }, { k: 'title', t: '标题' },
-        { k: 'link', t: '跳转到文章 id', type: 'select', opts: 'articles', blank: '（不跳转）' },
-        { k: 'desc', t: '说明', type: 'textarea' }
-      ]
-    },
     relations: {
       label: '马甲与关系', hint: '「分组」为「马甲」的条目会自动进入全站顶部的马甲切换器；其「强调色」就是切换后的整站主色。',
       mk: function () { return { id: Store.uid('r'), name: '新人物', group: 'god', role: '', color: '#6b727b', desc: '', link: '', portrait: '', album: [], storyIds: [] }; },
@@ -425,8 +414,7 @@
     var SUBS = [
       { k: 'eras',     t: '时代' },
       { k: 'places',   t: '地图标记' },
-      { k: 'timeline', t: '时间轴' },
-      { k: 'concepts', t: '概念分节点' }
+      { k: 'timeline', t: '历史时间轴' }
     ];
     var cur = 'eras';
     host.innerHTML = '<div class="sec-head"><span class="sec-num">祂的踪迹</span><span class="sec-title">时代 · 地图 · 时间轴 · 概念</span></div>' +

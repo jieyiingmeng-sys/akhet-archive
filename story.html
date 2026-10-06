@@ -40,12 +40,6 @@
       </div>
 
       <div>
-        <div class="view-tabs" id="viewTabs">
-          <button class="on" data-v="time">历史时间轴</button>
-          <button data-v="concept">祂的概念分节点</button>
-          <button data-v="era">按时代分组</button>
-        </div>
-
         <div class="pane-view" id="vTime">
           <div class="vtime">
             <div class="rail" id="rail" tabindex="0" role="scrollbar" aria-controls="tlScroll" aria-orientation="vertical" aria-label="拖动查看时间轴">
@@ -56,38 +50,6 @@
               <div class="tl-head"><span id="scrubNow"></span><span class="dim" id="scrubCount"></span></div>
               <div class="tl-scroll" id="tlScroll">
                 <div class="timeline" id="tlList"></div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="pane-view hide" id="vConcept">
-          <p class="hint">不按年代，按主题。这是祂自己的分节点。</p>
-          <div class="vtime">
-            <div class="rail" id="railConcept" tabindex="0" role="scrollbar" aria-controls="scConcept" aria-orientation="vertical" aria-label="拖动浏览概念分节点">
-              <div class="rail-track"><div class="rail-fill"></div></div>
-              <div class="rail-knob"></div>
-            </div>
-            <div>
-              <div class="tl-head"><span id="nowConcept"></span><span class="dim" id="cntConcept"></span></div>
-              <div class="tl-scroll" id="scConcept">
-                <div class="concept-list" id="cList"></div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="pane-view hide" id="vEra">
-          <p class="hint">每个时代下的事件超链接。</p>
-          <div class="vtime">
-            <div class="rail" id="railEra" tabindex="0" role="scrollbar" aria-controls="scEra" aria-orientation="vertical" aria-label="拖动浏览时代分组">
-              <div class="rail-track"><div class="rail-fill"></div></div>
-              <div class="rail-knob"></div>
-            </div>
-            <div>
-              <div class="tl-head"><span id="nowEra"></span><span class="dim" id="cntEra"></span></div>
-              <div class="tl-scroll" id="scEra">
-                <div class="era-groups" id="gList"></div>
               </div>
             </div>
           </div>
@@ -599,37 +561,7 @@
     if (scroll && rTime) rTime.toIndex(i);
   }
 
-  /* ---- 概念分节点 ---- */
-  function sortedConcepts() {
-    return (s.concepts || []).slice().sort(function (a, b) { return (a.order || 99) - (b.order || 99); });
-  }
-  function renderConcepts() {
-    var cs = sortedConcepts();
-    document.getElementById('cList').innerHTML = cs.map(function (c) {
-      var link = c.link ? '<a class="btn btn-sm" href="read.html?id=' + encodeURIComponent(c.link) + '">相关记录 ↗</a>' : '';
-      return '<div class="concept"><div class="c-ord">' + String(c.order || '').padStart(2, '0') + '</div>' +
-        '<div><h4>' + esc(c.title) + '</h4><p>' + esc(c.desc || '') + '</p>' + link + '</div></div>';
-    }).join('') || Common.empty('还没有概念节点。到后台「概念分节点」里添加。');
-    if (rConcept) { rConcept.reset(); rConcept.sync(); }
-  }
-
-  /* ---- 按时代分组 ---- */
-  function renderGroups() {
-    document.getElementById('gList').innerHTML = eras.map(function (e) {
-      var tl = (s.timeline || []).filter(function (t) { return t.eraId === e.id; });
-      var ps = (s.places || []).filter(function (p) { return p.eraId === e.id; });
-      return '<div class="era-group"><div class="eg-head"><h4>' + esc(e.name) + '</h4>' +
-        '<span class="dim">' + esc(e.range || '') + '　·　' + ps.length + ' 处标记</span></div>' +
-        '<div class="eg-items">' + (tl.map(function (t) {
-          return t.link
-            ? '<a class="eg-item" href="read.html?id=' + encodeURIComponent(t.link) + '">' + esc(t.title) + '</a>'
-            : '<span class="eg-item no">' + esc(t.title) + '</span>';
-        }).join('') || '<span class="dim">（暂无事件）</span>') + '</div></div>';
-    }).join('') || Common.empty('还没有时代。到后台「时代」里添加。');
-    if (rEra) { rEra.reset(); rEra.sync(); }
-  }
-
-  /* ---- 三个视图各绑一条拉轴 ---- */
+  /* ---- 历史时间轴（与地图互相关联） ---- */
   var rTime = bindRail('rail', 'tlScroll', '.tl-item', function (i) {
     var tl = visibleTimeline(), t = tl[i];
     if (!t) return;
@@ -637,32 +569,11 @@
     if (t.placeId && t.placeId !== curPlace) { curPlace = t.placeId; markPin(); }
     paintNow();
   });
-  var rConcept = bindRail('railConcept', 'scConcept', '.concept', function (i) {
-    var cs = sortedConcepts(), c = cs[i];
-    document.getElementById('cntConcept').textContent = cs.length ? (i + 1) + ' / ' + cs.length + ' 节点' : '0 个节点';
-    document.getElementById('nowConcept').textContent = c ? c.title : '（无）';
-  });
-  var rEra = bindRail('railEra', 'scEra', '.era-group', function (i) {
-    var e = eras[i];
-    document.getElementById('cntEra').textContent = eras.length ? (i + 1) + ' / ' + eras.length + ' 组' : '0 组';
-    document.getElementById('nowEra').textContent = e ? (e.name + '　' + (e.range || '')) : '（无）';
-  });
-
-  /* ---- 视角切换 ---- */
-  var VIEWS = { time: 'vTime', concept: 'vConcept', era: 'vEra' };
-  document.getElementById('viewTabs').addEventListener('click', function (e) {
-    var b = e.target.closest('button'); if (!b) return;
-    var v = b.getAttribute('data-v');
-    document.querySelectorAll('#viewTabs button').forEach(function (x) { x.classList.toggle('on', x === b); });
-    Object.keys(VIEWS).forEach(function (k) {
-      document.getElementById(VIEWS[k]).classList.toggle('hide', k !== v);
-    });
-  });
 
   function renderAll() {
     renderEraBar();
     document.getElementById('atlasNote').innerHTML = '<span class="dim">' + esc(eraNote()) + '</span>';
-    renderPins(); renderTimeline(); renderConcepts(); renderGroups();
+    renderPins(); renderTimeline();
   }
   renderAll();
 })();

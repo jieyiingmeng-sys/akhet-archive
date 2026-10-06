@@ -53,7 +53,6 @@
       eras: [],      // 时代（地图随时代切换）[{id,name,range,note}]
       places: [],    // 地图标记 [{id,eraId,name,region,x,y,desc,storyIds:[]}]
       timeline: [],  // 历史时间轴 [{id,eraId,year,title,desc,tag,placeId,link}]
-      concepts: [],  // 祂的概念分节点（另一条浏览轴）[{id,order,title,desc,link}]
       relations: [], // 人物关系 / 马甲 [{id,name,role,group,desc,color,portrait,album:[],link,storyIds:[]}]
       articles: [],  // 故事 + 祂的笔记 [{id,kind,title,...}]
       misreads: [],  // 目击记录（历史误读 / 诋毁与冠名混乱）[{id,kind,title,...}]
@@ -64,7 +63,7 @@
     };
   }
 
-  var ARRAYS = ['eras', 'places', 'timeline', 'concepts', 'relations',
+  var ARRAYS = ['eras', 'places', 'timeline', 'relations',
                 'articles', 'misreads', 'things', 'fans', 'gallery', 'images'];
 
   /* ---------- 访客版（只读快照） ----------
