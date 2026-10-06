@@ -27,16 +27,6 @@
   ];
 
   var SCHEMA = {
-    eras: {
-      label: '时代', hint: '地图与时间轴共用。切换时代时，地图上的标记与说明随之变化。',
-      mk: function () { return { id: Store.uid('e'), name: '新时代', range: '', note: '' }; },
-      title: function (o) { return o.name + (o.range ? '　·　' + o.range : ''); },
-      sub: function (o) { return o.note || ''; },
-      fields: [
-        { k: 'name', t: '名称' }, { k: 'range', t: '年代区间' },
-        { k: 'note', t: '说明', type: 'textarea' }
-      ]
-    },
     places: {
       label: '地图标记', hint: '经纬度填真实坐标（北纬为正 / 西经为负），也可以直接点下方地图取点，或直接填「地点 / 国家名」自动定位；「所属时代」决定该标记出现在哪个时代的地图上。填了「关联故事」的标记可点击跳转。「聚合组」同名的标记会合并成一个点，点开可展开列表。',
       mk: function () { return { id: Store.uid('p'), eraId: '', name: '新标记', region: '', lat: 0, lon: 0, group: '', desc: '', storyIds: [] }; },
@@ -53,20 +43,6 @@
         { k: 'lon', t: '经度 lon（东正西负）', type: 'num' },
         { k: 'desc', t: '说明', type: 'textarea' },
         { k: 'storyIds', t: '关联故事', type: 'storymulti' }
-      ]
-    },
-    timeline: {
-      label: '时间轴', hint: '「祂的踪迹」页历史视角的节点。可挂到某个时代与某个地图标记上。',
-      mk: function () { return { id: Store.uid('t'), eraId: '', placeId: '', year: '', title: '新事件', desc: '', tag: '', link: '' }; },
-      title: function (o) { return (o.year ? o.year + '　·　' : '') + o.title; },
-      sub: function (o) { return o.desc || ''; },
-      fields: [
-        { k: 'year', t: '年代' }, { k: 'title', t: '标题' },
-        { k: 'eraId', t: '所属时代', type: 'select', opts: 'eras' },
-        { k: 'placeId', t: '地图标记', type: 'select', opts: 'places' },
-        { k: 'tag', t: '标签（起点 / 转折 / 杀戮 …）' },
-        { k: 'link', t: '跳转到文章 id', type: 'select', opts: 'articles', blank: '（不跳转）' },
-        { k: 'desc', t: '说明', type: 'textarea' }
       ]
     },
     relations: {
@@ -404,35 +380,6 @@
       Store.markDirty();
       if (Store.save()) renderList(key, host);
     };
-  }
-
-  /* ---------------- 祂的踪迹（合并 时代 / 地图标记 / 时间轴 / 概念分节点） ----------------
-   * 这四类在前端共同组成「祂的踪迹」。后台用一个 tab 管理，内部用分段切换，
-   * 每段仍是通用 renderList 编辑器，所有字段（含地图取点、地名定位、关联故事等）原样保留。
-   */
-  function renderTrace(host) {
-    var SUBS = [
-      { k: 'eras',     t: '时代' },
-      { k: 'places',   t: '地图标记' },
-      { k: 'timeline', t: '历史时间轴' }
-    ];
-    var cur = 'eras';
-    host.innerHTML = '<div class="sec-head"><span class="sec-num">祂的踪迹</span><span class="sec-title">时代 · 地图 · 时间轴 · 概念</span></div>' +
-      '<p class="hint">这四类在前端共同组成「祂的踪迹」，可在此统一维护。马甲与关系在「马甲与关系」单独管理。</p>' +
-      '<div class="seg">' + SUBS.map(function (x) {
-        return '<button data-sub="' + x.k + '"' + (x.k === cur ? ' class="on"' : '') + '>' + x.t + '</button>';
-      }).join('') + '</div><div class="sub-pane" id="subPane"></div>';
-    var pane = $('#subPane', host);
-    function open(k) {
-      cur = k;
-      $$('.seg button', host).forEach(function (b) { b.classList.toggle('on', b.getAttribute('data-sub') === k); });
-      pane.innerHTML = '';
-      renderList(k, pane);
-    }
-    $$('.seg button', host).forEach(function (b) {
-      b.onclick = function () { open(b.getAttribute('data-sub')); };
-    });
-    open(cur);
   }
 
   /* 上传：写入 IndexedDB 并回填字段 */
@@ -1113,7 +1060,7 @@
     var appEl = $('#app');
     gate(appEl, function () {
       var TABS = [
-        { k: 'trace', t: '祂的踪迹', fn: renderTrace },
+        { k: 'trace', t: '祂的踪迹', fn: function (h) { renderList('places', h); } },
         { k: 'relations', t: '马甲与关系', fn: function (h) { renderList('relations', h); } },
         { k: 'stories', t: '故事全列表', fn: renderAllReadables },
         { k: 'things', t: '祂的东西', fn: function (h) { renderList('things', h); } },
