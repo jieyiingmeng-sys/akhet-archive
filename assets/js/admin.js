@@ -985,8 +985,15 @@
     function walk(v, path) {
       if (typeof v === 'string') {
         add(v, path.join(' · '));
-        var re = /img:([A-Za-z0-9_\-]+)/g, m;
-        while ((m = re.exec(v))) add(m[1], path.join(' · ') + '（正文内嵌）');
+        /* 字段值本身就是完整图片 id（如 coverImage: 'img_x'）时上面已计入，
+           不再走正文内嵌分支，免得同一处被算成两条。 */
+        if (!/^(img|med)_[A-Za-z0-9]+$/i.test(v)) {
+          /* 正文里的写法有 img:ID / img_ID / med:ID / med_ID 四种，编辑器插入的是
+             img:ID（ID 不带 img_ 前缀）。与 markdown.js、发布打包一样先归一成
+             img_ID / med_ID 再比对，否则在用的图会被误判成孤儿。 */
+          var re = /(img|med)[:_]([A-Za-z0-9]+)/gi, m;
+          while ((m = re.exec(v))) add(m[1].toLowerCase() + '_' + m[2], path.join(' · ') + '（正文内嵌）');
+        }
         return;
       }
       if (Array.isArray(v)) { v.forEach(function (x) { walk(x, path); }); return; }
