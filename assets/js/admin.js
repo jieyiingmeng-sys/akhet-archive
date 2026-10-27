@@ -924,7 +924,9 @@
       '<div class="f-img" id="pf_w"><span>首页主视觉图</span><div class="img-pick">' +
       '<span class="thumb big" data-img="' + esc(s.profile.portrait || '') + '"></span>' +
       '<input type="file" accept="image/*"><button class="btn mini" data-act="clear">清除</button></div></div>' +
-      '<div class="row"><button class="btn primary" id="sv">保存</button></div>';
+      '<div class="row"><button class="btn primary" id="sv">保存</button></div>' +
+      /* 站外展馆挂在「站点 / 档案」面板末尾（不单独占 tab）：关于页那三张卡在这里维护 */
+      '<div id="offsiteHost"></div>';
 
     $('#addF', host).onclick = function () {
       $('#fList', host).insertAdjacentHTML('beforeend',
@@ -947,6 +949,9 @@
       Store.markDirty();
       if (Store.save()) toast('已保存');
     };
+    /* 站外展馆编辑区（顺序即关于页从左到右）。放在站点保存按钮之后调用：
+       站点面板的 #sv 在文档中先于展馆表单的 #sv，querySelector 不会拿错。 */
+    renderList('offsite', $('#offsiteHost', host));
   }
 
   /* ---------------- 图片库 ---------------- */
@@ -1080,7 +1085,6 @@
         { k: 'things', t: '祂的东西', fn: function (h) { renderList('things', h); } },
         { k: 'fans', t: '网友作品', fn: function (h) { renderList('fans', h); } },
         { k: 'gallery', t: '祂的影像', fn: function (h) { renderList('gallery', h); } },
-        { k: 'offsite', t: '站外展馆', fn: function (h) { renderList('offsite', h); } },
         { k: 'site', t: '站点 / 档案', fn: renderSitePortrait },
         { k: 'images', t: '图片库', fn: renderImages },
         { k: 'backup', t: '备份', fn: renderBackup }
