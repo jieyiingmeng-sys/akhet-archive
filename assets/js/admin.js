@@ -955,17 +955,117 @@
   }
 
   /* ---------------- 图片库 ---------------- */
+  /* ---------------- 图片引用扫描 ----------------
+     目的：让「图片库」能分清哪张图正在被引用、哪张已经是孤儿（引用被删掉后剩下的）。
+     做法：递归走遍全部数据，任何等于图片 id 的字符串、以及正文里 ![](img:ID) 的写法都算引用。
+     字段名翻译成人话，位置写成「栏目 · 条目 · 字段」，方便直接读懂。 */
+  var IMG_FIELD_CN = {
+    imageId: '图', img: '底图', portrait: '主视觉', album: '相册',
+    body: '正文', cover: '封面', coverId: '封面', desc: '介绍', about: '正文'
+  };
+  var TAB_CN = {
+    places: '祂的踪迹', relations: '马甲与关系', things: '祂的东西', fans: '网友作品',
+    gallery: '祂的影像', offsite: '站外展馆', articles: '故事', misreads: '误读',
+    eras: '时代', timeline: '时间轴'
+  };
+
+  function scanImageRefs(s) {
+    var known = {};
+    (s.images || []).forEach(function (x) { known[x.id] = true; });
+    var map = {};
+    function add(id, where) {
+      if (!id || !known[id]) return;
+      if (!map[id]) map[id] = [];
+      if (map[id].indexOf(where) < 0) map[id].push(where);
+    }
+    function titleOf(o) {
+      if (!o || typeof o !== 'object') return '';
+      return o.title || o.name || o.id || '';
+    }
+    function walk(v, path) {
+      if (typeof v === 'string') {
+        add(v, path.join(' · '));
+        var re = /img:([A-Za-z0-9_\-]+)/g, m;
+        while ((m = re.exec(v))) add(m[1], path.join(' · ') + '（正文内嵌）');
+        return;
+      }
+      if (Array.isArray(v)) { v.forEach(function (x) { walk(x, path); }); return; }
+      if (!v || typeof v !== 'object') return;
+      Object.keys(v).forEach(function (k) {
+        if (k === 'images' || k === '__ro' || k === 'version' || k === 'dirty') return;
+        var seg = (k === 'site') ? '站点' : (k === 'profile') ? '档案'
+                : (TAB_CN[k] || IMG_FIELD_CN[k] || k);
+        var val = v[k];
+        if (Array.isArray(val) && TAB_CN[k]) {
+          val.forEach(function (o) {
+            if (o && typeof o === 'object') {
+              var t = titleOf(o);
+              Object.keys(o).forEach(function (k2) {
+                walk(o[k2], path.concat([seg + (t ? ' · ' + t : ''), IMG_FIELD_CN[k2] || k2]));
+              });
+            } else walk(o, path.concat([seg]));
+          });
+          return;
+        }
+        walk(val, path.concat([seg]));
+      });
+    }
+    walk(s, []);
+    return map;
+  }
+
   function renderImages(host) {
     var s = Store.load();
     var imgs = s.images || [];
+    var refs = scanImageRefs(s);
+    var usedList = [], orphanCount = 0;
+    imgs.forEach(function (o) {
+      var u = refs[o.id] || [];
+      if (u.length) usedList.push({ id: o.id, where: u });
+      else orphanCount++;
+    });
+
     host.innerHTML = '<div class="sec-head"><span class="sec-num">图片库</span><span class="sec-title">' + imgs.length + ' 张</span></div>' +
+      '<p class="hint">共 ' + imgs.length + ' 张　·　<b class="in-use-n">使用中 ' + usedList.length + '</b>　·　<b class="orphan-n">未使用 ' + orphanCount + '</b>' +
+      '<br>「使用中」= 站里还有地方引用它；「未使用」= 引用被删掉后剩下的孤儿图，可以放心清掉。' +
+      '删掉「使用中」的图，引用它的地方会变成空图（引用还在，图没了）。</p>' +
       '<div class="drop" id="drop">把图片拖到这里，或点击选择（自动压到长边 1800px 后存入 IndexedDB）</div>' +
       '<input type="file" id="fi" accept="image/*" multiple hidden>' +
+      '<div class="row">' +
+      (usedList.length ? '<button class="btn" id="whereBtn">使用明细（' + usedList.length + ' 张在用）</button>' : '') +
+      (orphanCount ? '<button class="btn danger" id="clean">清理未使用（' + orphanCount + '）</button>' : '') +
+      '</div>' +
+      '<div class="where-box" id="whereBox" hidden>' + (usedList.length ? usedList.map(function (u) {
+        return '<div class="where-row"><i class="thumb tiny" data-img="' + esc(u.id) + '"></i>' +
+          '<span>' + esc(u.where.join('\n')) + '</span></div>';
+      }).join('') : '') + '</div>' +
       '<div class="img-grid" id="ig">' + imgs.map(function (o) {
-        return '<span class="img-cell"><i class="thumb" data-img="' + esc(o.id) + '"></i>' +
-          '<b data-act="delimg" data-i="' + esc(o.id) + '">×</b></span>';
+        var u = refs[o.id] || [];
+        var isUsed = u.length > 0;
+        return '<span class="img-cell' + (isUsed ? '' : ' orphan') + '">' +
+          '<i class="thumb" data-img="' + esc(o.id) + '"></i>' +
+          '<span class="use-badge ' + (isUsed ? 'in-use' : 'orphan') + '">' + (isUsed ? '使用中 · ' + u.length + ' 处' : '未使用') + '</span>' +
+          '<b data-act="delimg" data-i="' + esc(o.id) + '">×</b>' +
+          (isUsed ? '<em class="use-where" title="' + esc(u.join('\n')) + '">' + esc(u[0]) + (u.length > 1 ? ' 等 ' + u.length + ' 处' : '') + '</em>' : '') +
+          '</span>';
       }).join('') + '</div>';
     Common.fillImages(host);
+
+    var wb = $('#whereBox', host);
+    var wbtn = $('#whereBtn', host);
+    if (wbtn) wbtn.onclick = function () { wb.hidden = !wb.hidden; };
+
+    var clean = $('#clean', host);
+    if (clean) clean.onclick = function () {
+      if (!confirm('将删除 ' + orphanCount + ' 张没有任何地方引用的图片。\n删掉后无法恢复，确定吗？')) return;
+      var d = Store.load();
+      var orphanIds = (d.images || []).filter(function (o) { return !(refs[o.id] || []).length; })
+        .map(function (o) { return o.id; });
+      d.images = (d.images || []).filter(function (o) { return orphanIds.indexOf(o.id) < 0; });
+      orphanIds.forEach(function (id) { Store.delImage(id); });
+      Store.markDirty(); Store.save(); renderImages(host);
+      toast('已清理 ' + orphanIds.length + ' 张未使用的图片');
+    };
 
     var drop = $('#drop', host), fi = $('#fi', host);
     drop.onclick = function () { fi.click(); };
@@ -991,6 +1091,13 @@
       var b = e.target.closest('[data-act=delimg]');
       if (!b) return;
       var id = b.getAttribute('data-i');
+      var u = refs[id] || [];
+      if (u.length) {
+        var msg = '这张图正在 ' + u.length + ' 处使用：\n\n' +
+          u.map(function (w) { return '· ' + w; }).join('\n') +
+          '\n\n删除后这些地方会变成空图（引用还在，图没了）。\n确定删除这张图吗？';
+        if (!confirm(msg)) return;
+      }
       var d = Store.load();
       d.images = (d.images || []).filter(function (x) { return x.id !== id; });
       Store.delImage(id); Store.markDirty(); Store.save(); renderImages(host);
