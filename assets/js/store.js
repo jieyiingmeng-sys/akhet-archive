@@ -84,7 +84,13 @@
     if (isReadOnly()) {
       cache = Object.assign(blank(), global.SNAPSHOT);
       cache.__ro = true;
-      ARRAYS.forEach(function (k) { if (!Array.isArray(cache[k])) cache[k] = []; });
+      var snap = global.SNAPSHOT || {};
+      ARRAYS.forEach(function (k) {
+        if (!Array.isArray(cache[k])) cache[k] = [];
+        /* 云端旧快照没有这个键（本次升级新加的栏目）→ 用种子默认值补齐；
+           快照里有的（含用户发布过的空数组）以快照为准 */
+        if (!(k in snap) && global.SEED && Array.isArray(global.SEED[k])) cache[k] = global.SEED[k];
+      });
       return cache;
     }
     try {
@@ -97,7 +103,13 @@
         cache.version = SEED_VERSION;
         cache.profile = Object.assign(b.profile, d.profile || {});
         cache.site = Object.assign(b.site, d.site || {});
-        ARRAYS.forEach(function (k) { if (!Array.isArray(cache[k])) cache[k] = []; });
+        ARRAYS.forEach(function (k) {
+          if (!Array.isArray(cache[k])) cache[k] = [];
+          /* 本地旧数据没有这个键（本次升级新加的栏目，如 offsite）→ 用种子默认值补齐，
+             否则老用户后台里只剩「＋新增」、改不了初始条目；
+             用户有意清空的（键在、值为 []）保持为空，不被种子填回来 */
+          if (!(k in d) && global.SEED && Array.isArray(global.SEED[k])) cache[k] = global.SEED[k];
+        });
         if (!Array.isArray(cache.profile.fields)) cache.profile.fields = [];
         return cache;
       }
