@@ -28,9 +28,31 @@
   </section>
 
   <section class="section">
-    <div class="sec-head"><span class="sec-num">MEDIA</span><span class="sec-title">书籍载体清单</span><span class="sec-en">Era × Region</span></div>
-    <p class="lede">文章与笔记点开后，会以所属时代与国家的书籍形态出现。载体在后台「故事 / 祂的笔记」里逐篇指定。</p>
-    <table class="field-table" id="mediaTable"></table>
+    <div class="sec-head"><span class="sec-num">OFF-SITE</span><span class="sec-title">站外展馆</span><span class="sec-en">Elsewhere</span></div>
+    <p class="lede">作者的其他网站：游戏、工具与个人作品。挂着「筹建中」签的还在准备，开放时间定了再挂链接——先记下位置。</p>
+    <div class="link-grid">
+      <div class="link-card">
+        <span class="lc-num">01</span>
+        <h3>阿赫特</h3>
+        <span class="lc-en">AKHET</span>
+        <p>「阿赫特」的游戏宣传与试玩 Demo 页。</p>
+        <span class="tag tag-gold">筹建中</span>
+      </div>
+      <div class="link-card">
+        <span class="lc-num">02</span>
+        <h3>文游写作助手</h3>
+        <span class="lc-en">WENYOU WRITER</span>
+        <p>文游写作助手的购入与试用页。</p>
+        <span class="tag tag-gold">筹建中</span>
+      </div>
+      <div class="link-card">
+        <span class="lc-num">03</span>
+        <h3>个人作品集</h3>
+        <span class="lc-en">PORTFOLIO</span>
+        <p>作者本人的画与作品归档。</p>
+        <span class="tag tag-gold">筹建中</span>
+      </div>
+    </div>
   </section>
 </main>
 
@@ -44,20 +66,12 @@
 <script src="assets/js/common.js"></script>
 <script>
 (function () {
-  var esc = Common.esc;
   var s = Store.load();
   Common.initNav('about');
 
   document.getElementById('about').innerHTML = MD.parse(s.site.about || '');
   Common.fillImages(document.getElementById('about'));
   document.title = '关于本站 · ' + s.site.title;
-
-  document.getElementById('mediaTable').innerHTML =
-    '<tr><th>载体</th><th>时代</th><th>地区</th><th>形态说明</th></tr>' +
-    Store.MEDIUMS.map(function (m) {
-      return '<tr><td><b>' + esc(m.name) + '</b><br><span style="font-family:var(--mono);font-size:10.5px;color:var(--ink-3)">' + esc(m.id) + '</span></td>' +
-        '<td>' + esc(m.era) + '</td><td>' + esc(m.region) + '</td><td>' + esc(m.hint) + '</td></tr>';
-    }).join('');
 
   Common.reveal();
 })();
