@@ -101,6 +101,20 @@
         { k: 'cat', t: '分级', type: 'select', opts: [{ v: 'finished', t: '插画' }, { v: 'sketch', t: '摸鱼' }, { v: 'manga', t: '故事漫' }] },
         { k: 'ratio', t: '比例', type: 'select', opts: [{ v: '3/4', t: '3/4 竖' }, { v: '1/1', t: '1/1 方' }, { v: '16/9', t: '16/9 横' }] }
       ]
+    },
+    offsite: {
+      label: '站外展馆',
+      hint: '关于页「站外展馆」的卡片，顺序即页面从左到右的顺序。「链接」留空 = 筹建中（挂筹建签、不可点）；「底图」留空 = 没有右侧渐变图。哪张卡把这两项都填上，它才变成「可点 + 有图」的完整形态——没填的卡保持原样，不受影响。',
+      mk: function () { return { id: Store.uid('o'), name: '新站点', en: '', desc: '', url: '', img: '' }; },
+      title: function (o) { return o.name + (o.url ? '（已开放）' : '（筹建中）'); },
+      sub: function (o) { return o.desc || ''; },
+      fields: [
+        { k: 'name', t: '站名' },
+        { k: 'en', t: '英文小字（可留空）' },
+        { k: 'desc', t: '一句话介绍', type: 'textarea' },
+        { k: 'url', t: '链接（留空 = 筹建中）' },
+        { k: 'img', t: '底图 · 右侧渐变（可留空）', type: 'img' }
+      ]
     }
   };
 
@@ -1066,6 +1080,7 @@
         { k: 'things', t: '祂的东西', fn: function (h) { renderList('things', h); } },
         { k: 'fans', t: '网友作品', fn: function (h) { renderList('fans', h); } },
         { k: 'gallery', t: '祂的影像', fn: function (h) { renderList('gallery', h); } },
+        { k: 'offsite', t: '站外展馆', fn: function (h) { renderList('offsite', h); } },
         { k: 'site', t: '站点 / 档案', fn: renderSitePortrait },
         { k: 'images', t: '图片库', fn: renderImages },
         { k: 'backup', t: '备份', fn: renderBackup }

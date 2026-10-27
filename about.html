@@ -30,28 +30,7 @@
   <section class="section">
     <div class="sec-head"><span class="sec-num">OFF-SITE</span><span class="sec-title">站外展馆</span><span class="sec-en">Elsewhere</span></div>
     <p class="lede">作者的其他网站：游戏、工具与个人作品。挂着「筹建中」签的还在准备，开放时间定了再挂链接——先记下位置。</p>
-    <div class="link-grid">
-      <div class="link-card">
-        <span class="lc-num">01</span>
-        <h3>AKHET：擦屁股之旅</h3>
-        <span class="lc-en">AKHET</span>
-        <p>「阿赫特」的游戏宣传与试玩 Demo 页。（暂定名）</p>
-        <span class="tag tag-gold">筹建中</span>
-      </div>
-      <a class="link-card is-link" href="https://wenyou-writer.pages.dev/" target="_blank" rel="noopener">
-        <span class="lc-num">02</span>
-        <h3>文游写作助手<span class="lc-ext">↗</span></h3>
-        <span class="lc-en">WENYOU WRITER</span>
-        <p>文游写作助手的在线网页版。</p>
-      </a>
-      <div class="link-card">
-        <span class="lc-num">03</span>
-        <h3>个人作品集</h3>
-        <span class="lc-en">PORTFOLIO</span>
-        <p>作者的其他作品。</p>
-        <span class="tag tag-gold">筹建中</span>
-      </div>
-    </div>
+    <div class="link-grid" id="offsiteGrid"></div>
   </section>
 </main>
 
@@ -65,12 +44,54 @@
 <script src="assets/js/common.js"></script>
 <script>
 (function () {
+  var esc = Common.esc;
   var s = Store.load();
   Common.initNav('about');
 
   document.getElementById('about').innerHTML = MD.parse(s.site.about || '');
   Common.fillImages(document.getElementById('about'));
   document.title = '关于本站 · ' + s.site.title;
+
+  /* 站外展馆：数据驱动（后台「站外展馆」页维护，顺序即页面从左到右）。
+     url 空 = 筹建中（不可点、挂签）；img 空 = 无渐变底图。 */
+  var OFF_DEFAULT = [
+    { id: 'o1', name: 'AKHET：擦屁股之旅', en: 'AKHET', desc: '「阿赫特」的游戏宣传与试玩 Demo 页。（暂定名）', url: '', img: '' },
+    { id: 'o2', name: '文游写作助手', en: 'WENYOU WRITER', desc: '文游写作助手的在线网页版。', url: 'https://wenyou-writer.pages.dev/', img: '' },
+    { id: 'o3', name: '个人作品集', en: 'PORTFOLIO', desc: '作者的其他作品。', url: '', img: '' }
+  ];
+  var offItems = s.offsite || [];
+  /* 访客版旧快照里没有 offsite 字段（本功能上线前的发布），用内置默认三卡兜底，
+     保证线上不空；后台改过展馆并重新发布后，这里全按数据走。 */
+  if (!offItems.length && s.__ro) offItems = OFF_DEFAULT;
+  var grid = document.getElementById('offsiteGrid');
+  if (!offItems.length) {
+    grid.innerHTML = '<div class="empty">展馆里还没有条目——到后台「站外展馆」添加。</div>';
+  } else {
+    grid.innerHTML = offItems.map(function (o, i) {
+      var num = ('0' + (i + 1)).slice(-2);
+      var open = !!o.url;
+      var h = '<span class="lc-num">' + num + '</span>' +
+        '<h3>' + esc(o.name) + (open ? '<span class="lc-ext">↗</span>' : '') + '</h3>' +
+        (o.en ? '<span class="lc-en">' + esc(o.en) + '</span>' : '') +
+        (o.desc ? '<p>' + esc(o.desc) + '</p>' : '');
+      if (open) {
+        return '<a class="link-card is-link" href="' + esc(o.url) + '" target="_blank" rel="noopener">' + h + '</a>';
+      }
+      return '<div class="link-card">' + h + '<span class="tag tag-gold">筹建中</span></div>';
+    }).join('');
+    /* 有底图的卡异步取图（IndexedDB / 快照内嵌），拿到再挂，不挡首屏 */
+    offItems.forEach(function (o, i) {
+      if (!o.img) return;
+      Store.imageURL(o.img).then(function (u) {
+        if (!u) return;
+        var el = grid.children[i];
+        if (el) {
+          el.style.setProperty('--card-img', 'url("' + u + '")');
+          el.classList.add('has-img');
+        }
+      });
+    });
+  }
 
   Common.reveal();
 })();

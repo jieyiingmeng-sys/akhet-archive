@@ -59,12 +59,13 @@
       things: [],    // 持有物 / 产业 / 作品 [{id,type,name,imageId,desc,tags:[]}]
       fans: [],      // 网友作品 [{id,title,author,imageId,tags:[],url,featured}]
       gallery: [],   // 插画 [{id,title,caption,tags:[],imageId,ratio}]
+      offsite: [],   // 站外展馆（关于页）[{id,name,en,desc,url,img}]
       images: []     // 图片索引 [{id,name,at}]
     };
   }
 
   var ARRAYS = ['eras', 'places', 'timeline', 'relations',
-                'articles', 'misreads', 'things', 'fans', 'gallery', 'images'];
+                'articles', 'misreads', 'things', 'fans', 'gallery', 'offsite', 'images'];
 
   /* ---------- 访客版（只读快照） ----------
    * 站点目录里放了 assets/js/snapshot.js（后台「发布」一键生成）时，

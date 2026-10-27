@@ -268,5 +268,14 @@ window.SEED = {
     { id: 'g1', title: '立绘 · 本相（待上传）', caption: '年轻、深肤色、石器时代北非', tags: ['立绘'], imageId: '', ratio: '3/4' },
     { id: 'g2', title: '场景 · 绿皮火车靠窗（待上传）', caption: '田野、晚点、硬座', tags: ['场景'], imageId: '', ratio: '16/9' },
     { id: 'g3', title: '设定 · 马甲对照（待上传）', caption: '伏羲 / 托特 / 恩基 / 普罗米修斯 / 羽蛇神', tags: ['设定', '马甲'], imageId: '', ratio: '1/1' }
+  ],
+
+  /* ---------- 站外展馆（关于页三卡） ----------
+   * url 留空 = 筹建中（不可点、挂筹建签）；img 留空 = 无渐变底图。
+   * 两者都填上，卡片自动变成「可点 + 右侧渐变图」的完整形态。 */
+  offsite: [
+    { id: 'o1', name: 'AKHET：擦屁股之旅', en: 'AKHET', desc: '「阿赫特」的游戏宣传与试玩 Demo 页。（暂定名）', url: '', img: '' },
+    { id: 'o2', name: '文游写作助手', en: 'WENYOU WRITER', desc: '文游写作助手的在线网页版。', url: 'https://wenyou-writer.pages.dev/', img: '' },
+    { id: 'o3', name: '个人作品集', en: 'PORTFOLIO', desc: '作者的其他作品。', url: '', img: '' }
   ]
 };
