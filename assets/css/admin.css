@@ -214,6 +214,15 @@ textarea.md{min-height:420px;font-family:var(--mono);font-size:13px;line-height:
 .preview .md-note{font-size:.8em;opacity:.7}
 .preview .md-epigraph{text-align:center;opacity:.7;font-style:italic}
 .hint{font-size:12.5px;color:var(--ink-3);line-height:1.9}
+
+/* ---------- 「祂的踪迹」面板：地图标记 / 时代 / 时间轴 三段 ---------- */
+.trace-sec{
+  margin-top:26px;padding-top:22px;border-top:1px solid var(--line-2);
+}
+.trace-sec:first-of-type{margin-top:16px;padding-top:0;border-top:none}
+.trace-sec .sec-head{margin-bottom:10px}
+.trace-sec .list{margin-top:12px}
+.trace-sec .form-box:empty{display:none}
 .warn{
   border:1px solid rgba(196,112,90,.35);background:rgba(196,112,90,.10);color:#e0a08c;
   padding:12px 14px;border-radius:2px;font-size:13px;line-height:1.8;margin-bottom:16px;

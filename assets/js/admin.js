@@ -14,15 +14,18 @@
     }
   }
 
-  /* 打开编辑器前，把旧的 #formBox 换成一个全新节点。
+  /* 打开编辑器前，把旧的编辑器容器换成一个全新节点。
    * 旧节点上挂的委托监听（媒体附件的增删、版本 / 来源的移除）会随旧节点一起丢弃；
-   * 否则连开两条条目后，点一次「移除」会同时作用到两条上，把另一条的附件也删掉。 */
-  function freshFormBox(host) {
-    var old = $('#formBox', host);
+   * 否则连开两条条目后，点一次「移除」会同时作用到两条上，把另一条的附件也删掉。
+   * scope 用来限定查找范围：同一屏里有多段列表（地图标记 / 时代 / 时间轴）时，
+   * 各自只在自己的段里找容器与「＋新增」按钮，互不串。 */
+  function freshFormBox(host, scope) {
+    var root = scope || host;
+    var old = root.querySelector('.form-box');
     var box = document.createElement('div');
-    box.id = 'formBox';
-    if (old) { box.className = old.className; old.replaceWith(box); }
-    else host.appendChild(box);
+    box.className = 'form-box';
+    if (old) old.replaceWith(box);
+    else root.appendChild(box);
     return box;
   }
 
@@ -126,6 +129,36 @@
         { k: 'desc', t: '一句话介绍', type: 'textarea' },
         { k: 'url', t: '链接（留空 = 筹建中）' },
         { k: 'img', t: '底图 · 右侧渐变（可留空）', type: 'img' }
+      ]
+    },
+    eras: {
+      label: '时代',
+      hint: '前台「祂的踪迹」页顶部那排切换按钮读的就是这里。「年代范围」会显示在按钮上，「说明」显示在地图下方的说明行里。顺序即按钮从左到右的顺序。地图标记和时间轴节点都靠「所属时代」归到某个时代下。',
+      append: true,
+      mk: function () { return { id: Store.uid('e'), name: '新时代', range: '', note: '' }; },
+      title: function (o) { return o.name + (o.range ? '　·　' + o.range : ''); },
+      sub: function (o) { return o.note || ''; },
+      fields: [
+        { k: 'name', t: '名称' },
+        { k: 'range', t: '年代范围（如 前 10000 — 前 3000）' },
+        { k: 'note', t: '说明（显示在地图下方）', type: 'textarea' }
+      ]
+    },
+    timeline: {
+      label: '时间轴',
+      hint: '前台「祂的踪迹」页右边那根竖向拉轴读的就是这里。顺序即时间轴从上到下的顺序。「所属时代」决定这个节点在切换到哪个时代时出现；「对应地点」决定点它时地图上高亮哪个标记；「关联故事」是节点上的「阅读 ↗」按钮，点了跳到那篇故事，不选就没有这个按钮。',
+      append: true,
+      mk: function () { return { id: Store.uid('t'), eraId: '', year: '', title: '新节点', desc: '', tag: '', placeId: '', link: '' }; },
+      title: function (o) { return (o.year ? o.year + '　·　' : '') + o.title + (o.tag ? '　·　' + o.tag : ''); },
+      sub: function (o, s) { return o.desc || ''; },
+      fields: [
+        { k: 'title', t: '标题' },
+        { k: 'year', t: '年份 / 时段（如 殷商、十几岁）' },
+        { k: 'tag', t: '标签（如 起点、转折、杀戮、马甲）' },
+        { k: 'eraId', t: '所属时代', type: 'select', opts: 'eras', blank: '（不属于任何时代）' },
+        { k: 'placeId', t: '对应地点（点它时地图高亮该标记）', type: 'select', opts: 'places', blank: '（不联动地图）' },
+        { k: 'link', t: '关联故事（「阅读 ↗」按钮跳过去）', type: 'select', opts: 'articles', blank: '（不设阅读链接）' },
+        { k: 'desc', t: '正文', type: 'textarea' }
       ]
     }
   };
@@ -247,9 +280,20 @@
     }
     if (f.type === 'select') {
       var opts = selectOpts(f.opts, s);
-      var head = f.blank ? '<option value="">' + esc(f.blank) + '</option>' : '';
+      /* 当前值若已经不在选项里（例如指向一篇被删掉的故事），
+         把它补成一条「已失效」的选项，免得下拉框静默跳到第一项，
+         一存就把原值改掉了。 */
+      var cur = String(v == null ? '' : v);
+      if (cur !== '' && !opts.some(function (x) { return String(x.v) === cur; })) {
+        opts = opts.concat([{ v: v, t: '（原值已失效 · ' + cur + '）' }]);
+      }
+      /* 当前值是空的（有「留空」选项的那种）时，要让那个空选项真的处于选中态。
+         否则浏览器会自己选中第一项，看起来像是替用户做了选择。 */
+      var head = f.blank
+        ? '<option value=""' + (cur === '' ? ' selected' : '') + '>' + esc(f.blank) + '</option>'
+        : '';
       return '<label class="' + cls + '"><span>' + f.t + '</span><select data-k="' + f.k + '">' + head +
-        opts.map(function (x) { return '<option value="' + esc(x.v) + '"' + (String(v) === String(x.v) ? ' selected' : '') + '>' + esc(x.t) + '</option>'; }).join('') +
+        opts.map(function (x) { return '<option value="' + esc(x.v) + '"' + (cur === String(x.v) ? ' selected' : '') + '>' + esc(x.t) + '</option>'; }).join('') +
         '</select></label>';
     }
     if (f.type === 'num') {
@@ -322,39 +366,42 @@
     return n ? n.value : '';
   }
 
-  function renderList(key, host) {
+  /* 通用列表编辑器。
+   * scope 是一段列表自己的容器（同一屏里有多段时用）；没有 scope 时沿用整屏 host。 */
+  function renderList(key, host, scope) {
+    var root = scope || host;
     var s = Store.load();
     var cfg = SCHEMA[key];
     var list = s[key] || [];
-    host.innerHTML = '<div class="sec-head"><span class="sec-num">' + cfg.label + '</span>' +
+    root.innerHTML = '<div class="sec-head"><span class="sec-num">' + cfg.label + '</span>' +
       '<span class="sec-title">' + list.length + ' 条</span></div>' +
       (cfg.hint ? '<p class="hint">' + esc(cfg.hint) + '</p>' : '') +
-      '<div class="row"><button class="btn primary" id="add">＋ 新增</button></div>' +
+      '<div class="row"><button class="btn primary list-add">＋ 新增</button></div>' +
       '<div class="list">' + list.map(function (o, i) {
         return '<div class="list-item" data-i="' + i + '">' +
           '<div class="li-main"><strong>' + esc(cfg.title(o)) + '</strong><span>' + esc(cfg.sub(o, s)) + '</span></div>' +
           '<div class="mini"><button data-act="edit">编辑</button><button data-act="up">↑</button><button data-act="down">↓</button><button data-act="del">删除</button></div>' +
           '</div>';
-      }).join('') + '</div><div class="form-box" id="formBox"></div>';
-    Common.fillImages(host);
+      }).join('') + '</div><div class="form-box"></div>';
+    Common.fillImages(root);
 
-    $('#add', host).onclick = function () { editItem(key, host, null); };
-    $$('.list-item', host).forEach(function (it) {
+    $('.list-add', root).onclick = function () { editItem(key, root, null); };
+    $$('.list-item', root).forEach(function (it) {
       var i = Number(it.getAttribute('data-i'));
       $$('button', it).forEach(function (b) {
         b.onclick = function () {
           var act = b.getAttribute('data-act');
           var d = Store.load();
-          if (act === 'edit') editItem(key, host, i);
+          if (act === 'edit') editItem(key, root, i);
           else if (act === 'del') {
             if (!confirm('删除这一条？')) return;
-            d[key].splice(i, 1); Store.markDirty(); Store.save(); renderList(key, host);
+            d[key].splice(i, 1); Store.markDirty(); Store.save(); renderList(key, root);
           } else if (act === 'up' && i > 0) {
             var t = d[key][i]; d[key][i] = d[key][i - 1]; d[key][i - 1] = t;
-            Store.markDirty(); Store.save(); renderList(key, host);
+            Store.markDirty(); Store.save(); renderList(key, root);
           } else if (act === 'down' && i < d[key].length - 1) {
             var t2 = d[key][i]; d[key][i] = d[key][i + 1]; d[key][i + 1] = t2;
-            Store.markDirty(); Store.save(); renderList(key, host);
+            Store.markDirty(); Store.save(); renderList(key, root);
           }
         };
       });
@@ -404,7 +451,11 @@
         if (f.type === 'map' || f.type === 'place' || f.type === 'media') return;
         o[f.k] = readField(box, f);
       });
-      if (idx == null) d[key].unshift(o); else d[key][idx] = o;
+      /* 新条目放哪：默认插到最前面（最新鲜的在最上）。
+         时代和时间轴的顺序本身有含义（按钮顺序、时间轴从上到下），
+         所以它们用 append：加到末尾，顺序由用户自己用 ↑↓ 调。 */
+      if (idx == null) { if (cfg.append) d[key].push(o); else d[key].unshift(o); }
+      else d[key][idx] = o;
       Store.markDirty();
       if (Store.save()) renderList(key, host);
     };
@@ -1214,12 +1265,28 @@
     clearTimeout(tt); tt = setTimeout(function () { el.classList.remove('on'); }, 1800);
   }
 
+  /* ---------------- 「祂的踪迹」面板 ----------------
+   * 前台那一页是「地图 + 时代切换 + 时间轴」三者联动，
+   * 所以后台把这三样放在一起改：地图标记、时代、时间轴。
+   * 三段各有自己的容器，列表按钮、编辑器、委托监听互不串。 */
+  function renderTrace(h) {
+    h.innerHTML = '<div class="sec-head"><span class="sec-num">祂的踪迹</span>' +
+      '<span class="sec-title">地图 · 时代 · 时间轴</span></div>' +
+      '<p class="hint">这三样在前台「祂的踪迹」页上是联动的：地图标记归到某个时代下，时间轴节点也归到某个时代下，点时间轴的节点会高亮地图上对应的标记。改完存好，前台刷新就生效。</p>' +
+      '<div class="trace-sec" id="secPlaces"></div>' +
+      '<div class="trace-sec" id="secEras"></div>' +
+      '<div class="trace-sec" id="secTimeline"></div>';
+    renderList('places', $('#secPlaces', h));
+    renderList('eras', $('#secEras', h));
+    renderList('timeline', $('#secTimeline', h));
+  }
+
   /* ---------------- 启动 ---------------- */
   document.addEventListener('DOMContentLoaded', function () {
     var appEl = $('#app');
     gate(appEl, function () {
       var TABS = [
-        { k: 'trace', t: '祂的踪迹', fn: function (h) { renderList('places', h); } },
+        { k: 'trace', t: '祂的踪迹', fn: renderTrace },
         { k: 'relations', t: '马甲与关系', fn: function (h) { renderList('relations', h); } },
         { k: 'stories', t: '故事全列表', fn: renderAllReadables },
         { k: 'things', t: '祂的东西', fn: function (h) { renderList('things', h); } },
