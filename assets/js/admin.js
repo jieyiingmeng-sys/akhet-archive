@@ -14,6 +14,18 @@
     }
   }
 
+  /* 打开编辑器前，把旧的 #formBox 换成一个全新节点。
+   * 旧节点上挂的委托监听（媒体附件的增删、版本 / 来源的移除）会随旧节点一起丢弃；
+   * 否则连开两条条目后，点一次「移除」会同时作用到两条上，把另一条的附件也删掉。 */
+  function freshFormBox(host) {
+    var old = $('#formBox', host);
+    var box = document.createElement('div');
+    box.id = 'formBox';
+    if (old) { box.className = old.className; old.replaceWith(box); }
+    else host.appendChild(box);
+    return box;
+  }
+
   /* ---------------- 字段 schema ---------------- */
   var GROUPS = [
     { v: 'avatar', t: '马甲' }, { v: 'god', t: '神族' }, { v: 'power', t: '位高权重的人' },
@@ -353,7 +365,9 @@
     var s = Store.load();
     var cfg = SCHEMA[key];
     var o = idx == null ? cfg.mk() : s[key][idx];
-    var box = $('#formBox', host);
+    /* 下标失效（条目已被删除）时不要继续，否则会在读 o[k] 时抛错、点「编辑」毫无反应 */
+    if (!o) { toast('这条已经不在了，列表已刷新'); renderList(key, host); return; }
+    var box = freshFormBox(host);
     box.innerHTML = '<div class="editor-card">' +
       '<div class="form-stack">' + cfg.fields.map(function (f) { return fieldHTML(f, o[f.k], s, o); }).join('') + '</div>' +
       '<div class="row"><button class="btn primary" id="sv">保存</button><button class="btn" id="cc">取消</button>' +
@@ -606,7 +620,9 @@
     rerender = rerender || function () { renderArticles(host, kind); };
     var s = Store.load();
     var a = s.articles[idx];
-    var box = $('#formBox', host);
+    /* 下标失效（条目已被删除）时不要继续，否则会在读 a.media 时抛错、点「编辑」毫无反应 */
+    if (!a) { toast('这条已经不在了，列表已刷新'); rerender(); return; }
+    var box = freshFormBox(host);
     var MED = Store.MEDIUMS;
     var avs = (s.relations || []).filter(Common.isAvatar);
 
@@ -720,17 +736,24 @@
 
   /* ---------------- 故事全列表（合并故事 / 祂的视角 / 目击记录） ---------------- */
   function renderAllReadables(host) {
-    var s = Store.load();
-    var arts = (s.articles || []).map(function (a, i) {
-      return { _src: (a.kind || 'story') === 'note' ? 'note' : 'story', _i: i, _o: a };
-    });
-    var mis = (s.misreads || []).map(function (m, i) {
-      return { _src: (m.kind || 'misread') === 'slander' ? 'slander' : 'misread', _i: i, _o: m };
-    });
-    var items = arts.concat(mis).sort(function (x, y) { return (y._o.updatedAt || 0) - (x._o.updatedAt || 0); });
+    var cur = 'all';
 
     var srcs = [['all', '全部'], ['story', '故事'], ['note', '祂的视角'], ['misread', '历史误读'], ['slander', '诋毁与冠名混乱']];
-    var cur = 'all';
+
+    /* 每次绘制都重新从 store 取一遍。
+       删过条目后，数组下标会整体前移；沿用旧下标会「删不掉」（行还在）、
+       「点编辑打不开」（下标越界取到 undefined）、「连删误删别的条目」。
+       所以列表、下标、条数一律现取现用。 */
+    function collect() {
+      var s = Store.load();
+      var arts = (s.articles || []).map(function (a, i) {
+        return { _src: (a.kind || 'story') === 'note' ? 'note' : 'story', _i: i, _o: a };
+      });
+      var mis = (s.misreads || []).map(function (m, i) {
+        return { _src: (m.kind || 'misread') === 'slander' ? 'slander' : 'misread', _i: i, _o: m };
+      });
+      return arts.concat(mis).sort(function (x, y) { return (y._o.updatedAt || 0) - (x._o.updatedAt || 0); });
+    }
 
     function segHTML() {
       return '<div class="seg">' + srcs.map(function (x) {
@@ -739,6 +762,7 @@
     }
 
     function draw() {
+      var items = collect();
       var list = cur === 'all' ? items : items.filter(function (it) { return it._src === cur; });
       host.innerHTML = '<div class="sec-head"><span class="sec-num">故事全列表</span><span class="sec-title">' + items.length + ' 条</span></div>' +
         '<p class="hint">故事 · 祂的视角（笔记）· 目击记录（历史误读 / 诋毁与冠名混乱）统一在此管理。可下钻到「祂的踪迹」「祂的马甲」「关系网」交叉查看。</p>' +
@@ -778,11 +802,11 @@
           pinned: false, createdAt: Date.now(), updatedAt: Date.now()
         };
         d.articles.unshift(a); Store.markDirty(); Store.save();
-        editArticle(host, kind, d.articles.indexOf(a), function () { renderAllReadables(host); });
+        editArticle(host, kind, d.articles.indexOf(a), draw);
       } else {
         var m = { id: Store.uid('m'), kind: kind, title: '新条目', era: '', region: '', summary: '', tags: [], versions: [], refs: [], media: [], noteId: '', storyIds: [] };
         d.misreads.unshift(m); Store.markDirty(); Store.save();
-        editMisread(host, d.misreads.indexOf(m), function () { renderAllReadables(host); });
+        editMisread(host, d.misreads.indexOf(m), draw);
       }
     }
 
@@ -792,8 +816,8 @@
         $$('button', it).forEach(function (b) {
           b.onclick = function () {
             if (b.getAttribute('data-act') === 'edit') {
-              if (src === 'misread' || src === 'slander') editMisread(host, i, function () { renderAllReadables(host); });
-              else editArticle(host, src, i, function () { renderAllReadables(host); });
+              if (src === 'misread' || src === 'slander') editMisread(host, i, draw);
+              else editArticle(host, src, i, draw);
             } else {
               if (!confirm('删除这条？')) return;
               if (src === 'misread' || src === 'slander') Store.load().misreads.splice(i, 1);
@@ -812,7 +836,9 @@
     rerender = rerender || function () { renderMisreads(host); };
     var s = Store.load();
     var m = s.misreads[idx];
-    var box = $('#formBox', host);
+    /* 下标失效（条目已被删除）时不要继续，否则会在读 m.versions 时抛错、点「编辑」毫无反应 */
+    if (!m) { toast('这条已经不在了，列表已刷新'); rerender(); return; }
+    var box = freshFormBox(host);
     var arts = sortA(s.articles || []);
 
     var verHTML = (m.versions || []).map(function (v, i) {
@@ -1211,7 +1237,16 @@
       function open(k) {
         var t = TABS.filter(function (x) { return x.k === k; })[0];
         $$('.tab', appEl).forEach(function (b) { b.classList.toggle('on', b.getAttribute('data-k') === k); });
-        pane.innerHTML = ''; t.fn(pane);
+        /* 换页时把 #pane 整个换掉，而不是只清 innerHTML。
+           面板上有几处委托监听（图片库删图、站点档案移除字段）绑在 host 上，
+           只清 innerHTML 不会解绑，来回切几次页就会叠成好几层，
+           点一次「×」把同一张图删好几遍。换成新节点，旧监听随旧节点一起消失。 */
+        var fresh = document.createElement('div');
+        fresh.className = 'pane on';
+        fresh.id = 'pane';
+        pane.replaceWith(fresh);
+        pane = fresh;
+        t.fn(pane);
         location.hash = '#' + k;
       }
       $$('.tab', appEl).forEach(function (b) {
